@@ -1,0 +1,20 @@
+{
+  "name": "lesitedudon",
+  "version": "0.1.0",
+  "description": "Le site du don",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "keywords": [],
+  "author": "Samuel Desbos",
+  "license": "ISC",
+  "dependencies": {
+    "next": "^9.2.2",
+    "normalize.css": "^8.0.1",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0"
+  }
+}

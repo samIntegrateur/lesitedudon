@@ -1,0 +1,34 @@
+:root {
+    --main-font: Arial, Helvetica, sans-serif;
+    --main-text-color: #333;
+
+    --primary-color: seagreen;
+    --primary-color-hover: green;
+
+    --container-width: 1280px;
+    --container-padding-x: 2rem;
+    --container-padding-y: 2rem;
+}
+
+html {
+    font-family: var(--main-font);
+    color: var(--main-text-color);
+}
+
+a {
+    color: var(--primary-color);
+}
+
+a:hover,
+a:focus {
+    color: var(--primary-color-hover);
+}
+
+
+*:first-child {
+    margin-top: 0;
+}
+
+*:last-child {
+    margin-bottom: 0;
+}
