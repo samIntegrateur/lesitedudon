@@ -3,7 +3,7 @@ import Container from '../Container/Container';
 import classes from './Footer.module.css';
 
 const Footer = (props) => (
-  <footer className={classes.Footer}>
+  <footer className={classes.footer}>
     <Container>
       <p>
         LeSiteDuDon © 2020
