@@ -1,0 +1,34 @@
+.formGroup {
+    display: block;
+}
+
+.formGroup:not(:last-child) {
+    margin-bottom: var(--form-group-margin);
+}
+
+.formGroup__label {
+    display: block;
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--form-label-margin);
+}
+
+.formGroup__control {
+    border: var(--form-control-border);
+    background-color: var(--form-control-bg);
+    color: var(--form-control-color);
+    font-family: var(--form-control-font);
+    font-size: var(--form-control-font-size);
+    padding: var(--form-control-padding);
+    display: block;
+    width: 100%;
+}
+
+textarea.formGroup__control {
+    resize: vertical;
+    min-height: 8rem;
+}
+
+.formGroupIsInvalid .formGroup__control {
+    border: 1px solid red;
+    background-color: #fda49a;
+}

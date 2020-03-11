@@ -1,18 +1,68 @@
 :root {
     --main-font: Arial, Helvetica, sans-serif;
     --main-text-color: #333;
+    --main-font-size: 1rem;
 
-    --primary-color: seagreen;
-    --primary-color-hover: green;
+    --font-weight-normal: 400;
+    --font-weight-bold: 700;
+
+    --primary-color: #2e8b57;
+    --primary-color-hover: #2d794e;
+
+    --border-color: #ccc;
+
+    --spacer: 1rem;
+
+    --space-xs: calc( var(--spacer) * 0.5);
+    --space-sm: calc( var(--spacer) * 0.8);
+    --space-md: calc( var(--spacer) * 1);
+    --space-lg: calc( var(--spacer) * 1.5);
+    --space-xl: calc( var(--spacer) * 2);
 
     --container-width: 1280px;
     --container-padding-x: 2rem;
     --container-padding-y: 2rem;
+
+    --btn-font: var(--main-font);
+    --btn-font-size: var(--main-font-size);
+    --btn-font-weight: var(--font-weight-normal);
+    --btn-border-width: 1px;
+    --btn-border-style: solid;
+    --btn-padding: var(--space-xs) var(--space-sm);
+    --btn-transition: color ease-out .2s, background-color ease-out .2s, border-color ease-out .2s;
+
+    --btn-default-border-color: var(--border-color);
+    --btn-default-bg: white;
+    --btn-default-color: var(--primary-color);
+    --btn-default-border-color-hover: var(--primary-color-hover);
+    --btn-default-bg-hover: white;
+    --btn-default-color-hover: var(--primary-color-hover);
+
+    --btn-primary-border-color: var(--primary-color);
+    --btn-primary-bg: var(--primary-color);
+    --btn-primary-color: white;
+    --btn-primary-border-color-hover: var(--primary-color-hover);
+    --btn-primary-bg-hover: var(--primary-color-hover);
+    --btn-primary-color-hover: white;
+
+
+    --form-group-margin: var(--space-md);
+    --form-label-margin: var(--space-xs);
+    --form-control-font: var(--main-font);
+    --form-control-font-size: var(--main-font-size);
+    --form-control-border-width: 1px;
+    --form-control-border-color: var(--border-color);
+    --form-control-border: var(--form-control-border-width) solid var(--form-control-border-color);
+    --form-control-color: var(--main-text-color);
+    --form-control-bg: white;
+    --form-control-padding: var(--space-xs) var(--space-sm);
 }
 
-html {
+body {
     font-family: var(--main-font);
     color: var(--main-text-color);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--main-font-size);
 }
 
 a {

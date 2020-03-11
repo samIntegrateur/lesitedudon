@@ -11,11 +11,11 @@ const Index = () => {
       <Link href="/creer-une-annonce"><a>Créer une annonce</a></Link>
 
       <h2>Les dernières annonces</h2>
-      <ul>
-        <li>
-          todo
-        </li>
-      </ul>
+      {/*<ul>*/}
+      {/*  <li>*/}
+      {/*    todo*/}
+      {/*  </li>*/}
+      {/*</ul>*/}
       <Link href="/annonces"><a>Voir plus</a></Link>
     </Layout>
   );
