@@ -1,3 +1,4 @@
+import React from 'react';
 import Layout from '../layout/Layout';
 import OfferForm from '../components/Offer/OfferForm/OfferForm';
 

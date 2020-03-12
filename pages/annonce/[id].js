@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router'
 import Layout from '../../layout/Layout';
+import OfferDetail from '../../components/Offer/OfferDetail/OfferDetail';
+import React from 'react';
 
 const Index = () => {
   const router = useRouter();
   const { id } = router.query;
-  console.log(router.query);
 
   const dynamicTitle = `Annonce ${id} - Le site du don`;
   return (
@@ -13,7 +14,7 @@ const Index = () => {
       title={dynamicTitle}
       description={dynamicTitle}>
 
-      <h1>Annonce {id}</h1>
+      <OfferDetail id={id} />
 
       <Link href="/"><a>Retour</a></Link>
     </Layout>

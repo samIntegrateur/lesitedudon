@@ -1,0 +1,37 @@
+.offer {
+
+}
+
+.offer__medias {
+    margin-bottom: var(--space-md);
+}
+
+.offer__media {
+
+}
+
+.offer__img {
+    width: 37.5rem;
+    height: 25rem;
+    object-fit: cover;
+}
+
+.offer__content {
+
+}
+
+.offer__header {
+    margin-bottom: var(--space-md);
+}
+
+.offer__title {
+
+}
+
+.offer__date {
+    color: var(--mute-text-color);
+}
+
+.offer__desc {
+
+}

@@ -1,3 +1,4 @@
+import React from 'react';
 import Layout from '../layout/Layout';
 import OfferList from '../components/Offer/OfferList/OfferList';
 

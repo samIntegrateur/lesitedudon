@@ -9,6 +9,7 @@
     display: inline-block;
     margin: 0;
     text-decoration: none;
+    transition: var(--btn-transition);
 }
 
 .btn:hover,
@@ -29,7 +30,6 @@
     background-color: #eee;
     cursor: not-allowed;
 }
-
 
 .btnDefault {
     color: var(--btn-default-color);
@@ -55,4 +55,17 @@
     color: var(--btn-primary-color-hover);
     background-color: var(--btn-primary-bg-hover);
     border-color: var(--btn-primary-border-color-hover);
+}
+
+.btnSecondary {
+    color: var(--btn-secondary-color);
+    background-color: var(--btn-secondary-bg);
+    border-color: var(--btn-secondary-border-color);
+}
+
+.btnSecondary:hover,
+.btnSecondary:focus {
+    color: var(--btn-secondary-color-hover);
+    background-color: var(--btn-secondary-bg-hover);
+    border-color: var(--btn-secondary-border-color-hover);
 }

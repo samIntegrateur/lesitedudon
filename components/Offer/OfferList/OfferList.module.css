@@ -1,0 +1,28 @@
+.offerList {
+    display: block;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.offerList__item {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.offerList__item:not(:last-child) {
+    margin-bottom: var(--space-md);
+}
+
+.offerList__itemLink {
+    display: block;
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    transition: border-color ease-out .2s;
+}
+
+.offerList__itemLink:hover,
+.offerList__itemLink:focus {
+    border: 1px solid var(--link-color);
+}

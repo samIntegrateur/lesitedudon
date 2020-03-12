@@ -15,14 +15,14 @@ const Layout = (props) => (
       <title key="title">{props.title || 'Le site du don'}</title>
       <meta name="description" content={props.description || 'Site de dons d\'objets. Offrez les objets qui vous encombrent et récupérez gratuitement ceux des autres'} />
     </Head>
-    <div className={classes.Layout}>
-      <Header />
-      <main role="main" className={classes.Main}>
+    <div className={classes.layout}>
+      <Header className={classes.layout__item} />
+      <main role="main" className={[classes.layout__item, classes.layout__main].join(' ')}>
         <Container>
           {props.children}
         </Container>
       </main>
-      <Footer />
+      <Footer className={classes.layout__item} />
     </div>
   </Fragment>
 );

@@ -1,5 +1,6 @@
 // import App from 'next/app';
 
+import React from 'react';
 import 'normalize.css/normalize.css';
 import '../public/style/global.css';
 
