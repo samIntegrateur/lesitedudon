@@ -13,7 +13,7 @@ const withErrorHandler = (WrappedComponent, axios) => {
       errorTemplate = (
         <div style={{marginBottom: '2rem'}}>
           <p style={{color: 'red', fontWeight: 'bold'}}>
-            La requête a échoué, nous sommes navré pour le désagrément.<br />
+            La requête a échoué, nous sommes navrés pour le désagrément.<br />
             Merci de nous contacter si le problème persiste.
           </p>
           <p>

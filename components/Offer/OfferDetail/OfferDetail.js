@@ -1,64 +1,59 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import classes from './OfferDetail.module.css';
-// import Moment from 'react-moment';
-import axios from '../../../shared/axios';
 import Spinner from '../../UI/Spinner/Spinner';
 import moment from 'moment';
-import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
+import * as actions from '../../../store/actions';
+import {connect} from 'react-redux';
+import Button from '../../UI/Button/Button';
+
 const OfferDetail = (props) => {
 
   let offerDisplay = null;
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState(null);
+  const {id, loading, error, offer, onFetchOffer} = props;
 
   useEffect(() => {
-    let isCancelled = false;
-    const fetchData = async () => {
-      setIsLoading(true);
-      const result = await axios.get(`/offers/${props.id}.json`);
-      setIsLoading(false);
-      if (!isCancelled && result) {
-        setData(result.data);
-      }
-    };
-
-    if (props.id) {
-      fetchData();
+    if (id) {
+      onFetchOffer(id);
     }
+  }, [id, onFetchOffer]);
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [props.id]);
-
-  if (isLoading) {
+  if (loading) {
     offerDisplay = <Spinner />
   } else {
-    if (data) {
+    if (error) {
+      offerDisplay = (
+        <div>
+          <p>
+            Une erreur s'est produite, l'annonce n'a pas pu être récupérée.
+          </p>
+          <Button type="a"
+                  style="default"
+                  href="/">
+            Retourner à l'accueil
+          </Button>
+        </div>
+      );
+    } else if (offer) {
       offerDisplay = (
         <article className={classes.offer}>
           <section className={classes.offer__medias}>
             <figure className={classes.offer__media}>
-              <img className={classes.offerPreview_img}
+              <img className={classes.offer__img}
                    src={`https://picsum.photos/800/600`} alt="Aperçu objet" />
             </figure>
           </section>
           <div className={classes.offer__content}>
             <header className={classes.offer__header}>
               <h1 className={classes.offer__title}>
-                {data.title}
+                {offer.title}
               </h1>
-              <time dateTime={moment(data.creationDate).format('YYYY-MM-DDThh:mm')}>
-                {moment(data.creationDate).format('DD/MM/YYYY - HH:mm')}
+              <time dateTime={moment(offer.creationDate).format('YYYY-MM-DDThh:mm')}>
+                {moment(offer.creationDate).format('DD/MM/YYYY - HH:mm')}
               </time>
-              {/*This causes an error*/}
-              {/*<Moment className={classes.offer__date} format="DD/MM/YYYY - HH:mm">*/}
-              {/*  {data.creationDate}*/}
-              {/*</Moment>*/}
             </header>
             <div className="offer__desc">
-              {data.description}
+              {offer.description}
             </div>
           </div>
         </article>
@@ -69,4 +64,18 @@ const OfferDetail = (props) => {
   return offerDisplay;
 };
 
-export default withErrorHandler(OfferDetail, axios);
+const mapStateToProps = state => {
+  return {
+    offer: state.offer.currentOffer,
+    loading: state.offer.loading,
+    error: state.offer.apiState.fetchOffer.error,
+  }
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    onFetchOffer: (id) => dispatch(actions.fetchOffer(id)),
+  }
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(OfferDetail);

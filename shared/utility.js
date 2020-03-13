@@ -5,6 +5,12 @@ export const updateObject = (oldObject, updatedProperties) => {
   };
 };
 
+export const updateApiState = (apiState, apiAction, updatedProperties) => {
+  return updateObject(apiState, {
+    [apiAction]: updateObject(apiState[apiAction], updatedProperties)
+  });
+};
+
 export const checkValidity = (value, rules) => {
   if (!rules) {
     return true;

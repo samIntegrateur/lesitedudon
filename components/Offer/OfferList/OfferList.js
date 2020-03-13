@@ -1,56 +1,43 @@
-import React, {useEffect, useState} from 'react';
-import axios from '../../../shared/axios';
+import React, {useEffect} from 'react';
 import Link from 'next/link';
 import OfferPreview from '../OfferPreview/OfferPreview';
 import classes from './OfferList.module.css';
 import Spinner from '../../UI/Spinner/Spinner';
-import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
+import * as actions from '../../../store/actions/'
+import {connect} from 'react-redux';
+import Button from '../../UI/Button/Button';
 
-const OfferList = () => {
+const OfferList = (props) => {
 
   let offersDisplay = null;
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState(null);
+  const {loading, error, offers, onFetchOffers} = props;
 
   useEffect(() => {
-    let isCancelled = false;
-    const fetchData = async () => {
-      setIsLoading(true);
-      // todo: we can't sort desc, so we must take what we want (eventually with limitToLast) then sort in front
-      const result = await axios.get('/offers.json?orderBy="creationDate"');
-      setIsLoading(false);
+    onFetchOffers();
+  },[onFetchOffers]);
 
-      if (!isCancelled && result) {
-        let sanitizedOffersData = [];
-        for (let key in result.data) {
-          sanitizedOffersData.push({
-            ...result.data[key],
-            id: key,
-          });
-        }
-        sanitizedOffersData.sort((a, b) => (a.creationDate < b.creationDate) ? 1 : -1);
-        console.log('sanitizedOffersData', sanitizedOffersData);
-        setData(sanitizedOffersData);
-      }
-
-    };
-
-    fetchData();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
-  if (isLoading) {
+  if (loading) {
     offersDisplay = <Spinner />
   } else {
-    if (data) {
-      if (data.length) {
+    if (error) {
+      offersDisplay = (
+        <div>
+          <p>
+            Une erreur s'est produite, les annonces n'ont pas pu être récupérées.
+          </p>
+          <Button type="a"
+                  style="default"
+                  href="/">
+            Retourner à l'accueil
+          </Button>
+        </div>
+      );
+    } else if (offers) {
+      if (offers.length > 0) {
         offersDisplay = (
           <ul className={classes.offerList}>
-            {data.map(offer => (
+            {offers.map(offer => (
               <li key={offer.id} className={classes.offerList__item}>
                 <Link href={`/annonce/${offer.id}`}>
                   <a title="Voir l'annonce" className={classes.offerList__itemLink}>
@@ -74,4 +61,18 @@ const OfferList = () => {
   );
 };
 
-export default withErrorHandler(OfferList, axios);
+const mapStateToProps = state => {
+  return {
+    offers: state.offer.offers,
+    loading: state.offer.loading,
+    error: state.offer.apiState.fetchOffers.error,
+  }
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    onFetchOffers: () => dispatch(actions.fetchOffers()),
+  }
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(OfferList);

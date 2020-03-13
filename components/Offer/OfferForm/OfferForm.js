@@ -1,17 +1,22 @@
-import React, {useState} from 'react';
-import axios from '../../../shared/axios';
+import React, {useEffect, useState} from 'react';
 import Input from '../../UI/Input/Input';
 import {checkValidity, updateObject} from '../../../shared/utility';
 import Button from '../../UI/Button/Button';
-import moment from 'moment';
 import Spinner from '../../UI/Spinner/Spinner';
-import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
+import * as actions from '../../../store/actions';
+import {connect} from 'react-redux';
 
-const OfferForm = () => {
+const OfferForm = (props) => {
   let formDisplay = null;
 
-  const [postSuccess, setPostSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const {loading, error, success, onPostOffer, onPostOfferClear} = props;
+
+  useEffect(() => {
+    return () => {
+      console.log('clear');
+      onPostOfferClear();
+    }
+  }, [onPostOfferClear]);
 
   const [offerForm, setOfferForm] = useState({
     title: {
@@ -65,29 +70,15 @@ const OfferForm = () => {
   };
 
   const offerSubmitHandler = (event) => {
-    setIsLoading(true);
     event.preventDefault();
 
     const formData = {};
     for (let formElementIdentifier in offerForm) {
       formData[formElementIdentifier] = offerForm[formElementIdentifier].value;
     }
-    formData.creationDate = moment().unix();
+    formData.creationDate = new Date();
 
-    axios.post('/offers.json', formData)
-      .then(response => {
-        setIsLoading(false);
-        if (response) {
-          setPostSuccess(true);
-        } else {
-          setPostSuccess(false);
-        }
-      })
-      .catch(error => {
-        setIsLoading(false);
-        setPostSuccess(false);
-        return error;
-      });
+    onPostOffer(formData);
   };
 
   // Format offerForm for jsx
@@ -99,13 +90,29 @@ const OfferForm = () => {
     })
   }
 
-  if (isLoading) {
+  if (loading) {
     formDisplay = <Spinner/>;
   } else {
-    if (postSuccess) {
+    if (success) {
       formDisplay = (
         <div>
           <p>Votre annonce a bien été publiée !</p>
+          <Button type="a"
+                  style="default"
+                  href="/">
+            Retourner à l'accueil
+          </Button>
+        </div>
+      );
+    } else if (error) {
+      formDisplay = (
+        <div>
+          <p>Une erreur s'est produite, votre annonce n'a pu être publiée.</p>
+          {/*<Button type="a"*/}
+          {/*        style="default"*/}
+          {/*        clicked={setPostError(false)}>*/}
+          {/*  Réessayer*/}
+          {/*</Button>*/}
           <Button type="a"
                   style="default"
                   href="/">
@@ -149,4 +156,20 @@ const OfferForm = () => {
   return formDisplay;
 };
 
-export default withErrorHandler(OfferForm, axios);
+const mapStateToProps = state => {
+  return {
+    loading: state.offer.loading,
+    error: state.offer.apiState.postOffer.error,
+    success: state.offer.apiState.postOffer.success,
+  }
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    onPostOffer: (offer) => dispatch(actions.postOffer(offer)),
+    onPostOfferClear: (offer) => dispatch(actions.postOfferClear()),
+  }
+};
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(OfferForm);

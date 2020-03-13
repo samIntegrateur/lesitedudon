@@ -4,6 +4,7 @@ import Layout from '../layout/Layout';
 
 const Index = () => {
   return (
+
     <Layout
       title="Le site du don"
       description="Site de dons d'objets. Offrez les objets qui vous encombrent et récupérez gratuitement ceux des autres">

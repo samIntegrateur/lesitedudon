@@ -1,12 +1,15 @@
-// import App from 'next/app';
+import App from 'next/app';
 
 import React from 'react';
+import withRedux from 'next-redux-wrapper';
 import 'normalize.css/normalize.css';
 import '../public/style/global.css';
+import {Provider} from 'react-redux';
+import {makeStore} from '../store/store';
 
-function MyApp({ Component, pageProps }) {
-  return <Component {...pageProps} />
-}
+// function MyApp({ Component, pageProps }) {
+//   return <Component {...pageProps} />
+// }
 
 // Only uncomment this method if you have blocking data requirements for
 // every single page in your application. This disables the ability to
@@ -20,4 +23,19 @@ function MyApp({ Component, pageProps }) {
 //   return { ...appProps }
 // }
 
-export default MyApp
+// export default MyApp
+
+
+export default withRedux(makeStore, {debug: false})(
+  class MyApp extends App {
+
+    render() {
+      const { Component, pageProps, store } = this.props;
+      return (
+          <Provider store={store}>
+            <Component {...pageProps} />
+          </Provider>
+      );
+    }
+  }
+);
