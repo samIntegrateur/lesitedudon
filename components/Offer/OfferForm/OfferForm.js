@@ -5,12 +5,12 @@ import {checkValidity, updateObject} from '../../../shared/utility';
 import Button from '../../UI/Button/Button';
 import moment from 'moment';
 import Spinner from '../../UI/Spinner/Spinner';
+import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
 
 const OfferForm = () => {
   let formDisplay = null;
 
   const [postSuccess, setPostSuccess] = useState(false);
-  const [postError, setPostError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [offerForm, setOfferForm] = useState({
@@ -68,23 +68,25 @@ const OfferForm = () => {
     setIsLoading(true);
     event.preventDefault();
 
-    // format to appropriate json model
     const formData = {};
     for (let formElementIdentifier in offerForm) {
       formData[formElementIdentifier] = offerForm[formElementIdentifier].value;
     }
     formData.creationDate = moment().unix();
-    console.log('formData.creationDate', formData.creationDate);
 
-    // todo handle error with interceptor
     axios.post('/offers.json', formData)
-      .then(response => { console.log('then');
+      .then(response => {
         setIsLoading(false);
-        setPostSuccess(true);
+        if (response) {
+          setPostSuccess(true);
+        } else {
+          setPostSuccess(false);
+        }
       })
       .catch(error => {
         setIsLoading(false);
-        setPostError(true);
+        setPostSuccess(false);
+        return error;
       });
   };
 
@@ -104,22 +106,6 @@ const OfferForm = () => {
       formDisplay = (
         <div>
           <p>Votre annonce a bien été publiée !</p>
-          <Button type="a"
-                  style="default"
-                  href="/">
-            Retourner à l'accueil
-          </Button>
-        </div>
-      );
-    } else if (postError) {
-      formDisplay = (
-        <div>
-          <p>Une erreur s'est produite, votre annonce n'a pu être publiée.</p>
-          <Button type="a"
-                  style="default"
-                  clicked={setPostError(false)}>
-            Réessayer
-          </Button>
           <Button type="a"
                   style="default"
                   href="/">
@@ -163,4 +149,4 @@ const OfferForm = () => {
   return formDisplay;
 };
 
-export default OfferForm;
+export default withErrorHandler(OfferForm, axios);

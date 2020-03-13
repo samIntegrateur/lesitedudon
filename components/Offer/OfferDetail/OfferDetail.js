@@ -4,25 +4,32 @@ import classes from './OfferDetail.module.css';
 import axios from '../../../shared/axios';
 import Spinner from '../../UI/Spinner/Spinner';
 import moment from 'moment';
+import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
 const OfferDetail = (props) => {
 
   let offerDisplay = null;
 
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState([]);
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    const result = await axios.get(`/offers/${props.id}.json`);
-    setIsLoading(false);
-    setData(result.data);
-    console.log('result.data', result.data);
-  };
+  const [data, setData] = useState(null);
 
   useEffect(() => {
+    let isCancelled = false;
+    const fetchData = async () => {
+      setIsLoading(true);
+      const result = await axios.get(`/offers/${props.id}.json`);
+      setIsLoading(false);
+      if (!isCancelled && result) {
+        setData(result.data);
+      }
+    };
+
     if (props.id) {
       fetchData();
     }
+
+    return () => {
+      isCancelled = true;
+    };
   }, [props.id]);
 
   if (isLoading) {
@@ -56,14 +63,10 @@ const OfferDetail = (props) => {
           </div>
         </article>
       );
-    } else {
-      offerDisplay = (
-        <p><strong>L'annonce n'a pas pu être récupérée.</strong></p>
-      )
     }
   }
 
   return offerDisplay;
 };
 
-export default OfferDetail;
+export default withErrorHandler(OfferDetail, axios);

@@ -16,7 +16,7 @@ const Index = () => {
 
       <OfferDetail id={id} />
 
-      <Link href="/"><a>Retour</a></Link>
+      <a onClick={router.back}>Retour</a>
     </Layout>
   );
 };
