@@ -1,7 +1,4 @@
-import App from 'next/app';
-
-import React from 'react';
-import withRedux from 'next-redux-wrapper';
+// import App from 'next/app';
 import 'normalize.css/normalize.css';
 import '../public/style/global.css';
 import {Provider} from 'react-redux';
@@ -24,18 +21,14 @@ import {makeStore} from '../store/store';
 // }
 
 // export default MyApp
+const store = makeStore();
 
+function MyApp({ Component, pageProps }) {
+  return (
+    <Provider store={store}>
+      <Component {...pageProps} />
+    </Provider>
+  );
+}
 
-export default withRedux(makeStore, {debug: false})(
-  class MyApp extends App {
-
-    render() {
-      const { Component, pageProps, store } = this.props;
-      return (
-          <Provider store={store}>
-            <Component {...pageProps} />
-          </Provider>
-      );
-    }
-  }
-);
+export default MyApp

@@ -31,6 +31,22 @@
     cursor: not-allowed;
 }
 
+
+.btnLink {
+    padding-left: 0;
+    padding-right: 0;
+    background-color: transparent;
+    border: none;
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
+.btnLink:hover,
+.btnLink:focus {
+    color: var(--secondary-color-hover);
+    text-decoration: underline;
+}
+
 .btnDefault {
     color: var(--btn-default-color);
     background-color: var(--btn-default-bg);

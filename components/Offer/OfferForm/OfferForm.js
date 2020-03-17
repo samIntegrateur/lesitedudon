@@ -13,7 +13,6 @@ const OfferForm = (props) => {
 
   useEffect(() => {
     return () => {
-      console.log('clear');
       onPostOfferClear();
     }
   }, [onPostOfferClear]);

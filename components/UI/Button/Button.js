@@ -11,6 +11,9 @@ const Button = (props) => {
     case ('default'):
       classList.push(classes.btnDefault);
       break;
+    case ('link'):
+      classList.push(classes.btnLink);
+      break;
     case ('primary'):
       classList.push(classes.btnPrimary);
       break;

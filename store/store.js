@@ -2,10 +2,11 @@
 
 import createSagaMiddleware from 'redux-saga';
 import {applyMiddleware, combineReducers, createStore} from 'redux';
-import {watchOffer} from './sagas';
+import {watchOffer, watchAuth} from './sagas';
 import offerReducer from './reducers/offer';
 import thunk from 'redux-thunk';
 import {composeWithDevTools} from 'redux-devtools-extension/developmentOnly';
+import authReducer from './reducers/auth';
 
 export const makeStore = (initialState, options) => {
   // 1: Create the middleware
@@ -15,6 +16,7 @@ export const makeStore = (initialState, options) => {
   // return createStore(reducer, initialState);
 
   const rootReducer = combineReducers({
+    auth: authReducer,
     offer: offerReducer,
   });
 
@@ -30,6 +32,7 @@ export const makeStore = (initialState, options) => {
   ));
 
   // 3: Run your sagas:
+  sagaMiddleware.run(watchAuth);
   sagaMiddleware.run(watchOffer);
 
   // 4: now return the store:

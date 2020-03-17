@@ -37,3 +37,15 @@ export const checkValidity = (value, rules) => {
 
   return isValid;
 };
+
+export const sanitizeOffers = (data) => {
+  let sanitizedOffersData = [];
+  for (let key in data) {
+    sanitizedOffersData.push({
+      ...data[key],
+      id: key,
+    });
+  }
+  sanitizedOffersData.sort((a, b) => (a.creationDate < b.creationDate) ? 1 : -1);
+  return sanitizedOffersData;
+};
