@@ -9,7 +9,7 @@ import {connect} from 'react-redux';
 const OfferForm = (props) => {
   let formDisplay = null;
 
-  const {loading, error, success, onPostOffer, onPostOfferClear} = props;
+  const {loading, error, success, onPostOffer, onPostOfferClear, userId, token} = props;
 
   useEffect(() => {
     return () => {
@@ -76,8 +76,9 @@ const OfferForm = (props) => {
       formData[formElementIdentifier] = offerForm[formElementIdentifier].value;
     }
     formData.creationDate = new Date();
+    formData.userId = userId;
 
-    onPostOffer(formData);
+    onPostOffer(formData, token);
   };
 
   // Format offerForm for jsx
@@ -107,6 +108,10 @@ const OfferForm = (props) => {
       formDisplay = (
         <div>
           <p>Une erreur s'est produite, votre annonce n'a pu être publiée.</p>
+
+          <p>
+            {error}
+          </p>
           {/*<Button type="a"*/}
           {/*        style="default"*/}
           {/*        clicked={setPostError(false)}>*/}
@@ -160,13 +165,15 @@ const mapStateToProps = state => {
     loading: state.offer.loading,
     error: state.offer.apiState.postOffer.error,
     success: state.offer.apiState.postOffer.success,
+    userId: state.auth.userId,
+    token: state.auth.token,
   }
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    onPostOffer: (offer) => dispatch(actions.postOffer(offer)),
-    onPostOfferClear: (offer) => dispatch(actions.postOfferClear()),
+    onPostOffer: (offer, token) => dispatch(actions.postOffer(offer, token)),
+    onPostOfferClear: () => dispatch(actions.postOfferClear()),
   }
 };
 

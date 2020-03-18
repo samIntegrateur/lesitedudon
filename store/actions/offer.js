@@ -56,10 +56,11 @@ export const fetchOfferFail = (error) => {
 };
 
 // POST OFFER
-export const postOffer = (offer) => {
+export const postOffer = (offer, token) => {
   return {
     type: actionTypes.POST_OFFER,
     offer,
+    token,
   }
 };
 
@@ -76,6 +77,7 @@ export const postOfferSuccess = () => {
 };
 
 export const postOfferFail = (error) => {
+  console.log('postOfferFail', error);
   return {
     type: actionTypes.POST_OFFER_FAIL,
     error,

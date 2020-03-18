@@ -3,9 +3,36 @@
     color: #fff;
 }
 
+.header a,
+.header a:hover,
+.header a:focus {
+    color: #fff;    
+}
+
 .linkTitle,
 .linkTitle:focus,
 .linkTitle:hover {
     color: inherit;
     text-decoration: none;
+}
+
+.header__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header__logo {
+
+}
+
+.header__nav {
+
+}
+
+.header__navList,
+.header__navListItem {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }

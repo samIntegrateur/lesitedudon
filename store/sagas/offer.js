@@ -34,12 +34,18 @@ export function* postOfferSaga(action) {
   yield put(actions.postOfferStart());
 
   try {
-    yield call(fetch, `${API_BASE_URL}offers.json`, {
+    const response = yield call(fetch, `${API_BASE_URL}offers.json?auth=${action.token}`, {
       method: 'POST',
       body: JSON.stringify(action.offer),
       headers: { 'Content-Type': 'application/json' }
     });
-    yield put(actions.postOfferSuccess());
+    const responseBody = yield response.json();
+    if (responseBody.error) {
+      console.log('responseBody error', responseBody);
+      yield put(actions.postOfferFail(responseBody.error));
+    } else {
+      yield put(actions.postOfferSuccess());
+    }
   } catch (error) {
     yield put(actions.postOfferFail(error));
   }

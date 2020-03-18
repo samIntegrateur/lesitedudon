@@ -6,11 +6,10 @@ import Button from '../../UI/Button/Button';
 import * as actions from '../../../store/actions/';
 import {connect} from 'react-redux';
 
-const AuthentificationForm = (props) => {
+const ConnexionForm = (props) => {
 
   let formDisplay = null;
   let errorMessage = null;
-  let authRedirect = null;
 
   const [controls, setControls] = useState({
     email: {
@@ -85,40 +84,22 @@ const AuthentificationForm = (props) => {
   if (props.loading) {
     formDisplay = <Spinner />;
   } else {
-    formDisplay = formElementArray.map(formElement => (
-      <Input
-        key={formElement.id}
-        elementType={formElement.config.elementType}
-        elementConfig={formElement.config.elementConfig}
-        value={formElement.config.value}
-        invalid={!formElement.config.valid}
-        shouldValidate={formElement.config.validation}
-        touched={formElement.config.touched}
-        changed={(event) => inputChangedHandler(event, formElement.id)}
-      />
-
-    ));
-  }
-
-  if (props.error) {
-    errorMessage = (
-      <p>{props.error.message}</p>
-    );
-  }
-
-  if (props.isAuthenticated) {
-    authRedirect = <p>CONNEXION OK redirect to do</p>
-  }
-
-  return (
-    <div>
-      {authRedirect}
-      {errorMessage}
-
-      <form onSubmit={submitHandler}>
-        <h1>{isSignin ? 'Connexion' : 'Je crée mon compte'}</h1>
-
-        {formDisplay}
+    formDisplay = (
+      <div>
+        {
+          formElementArray.map(formElement => (
+            <Input
+              key={formElement.id}
+              elementType={formElement.config.elementType}
+              elementConfig={formElement.config.elementConfig}
+              value={formElement.config.value}
+              invalid={!formElement.config.valid}
+              shouldValidate={formElement.config.validation}
+              touched={formElement.config.touched}
+              changed={(event) => inputChangedHandler(event, formElement.id)}
+            />
+          ))
+        }
 
         <Button
           type="submit"
@@ -134,6 +115,37 @@ const AuthentificationForm = (props) => {
             {isSignin ? 'Créer un compte' : 'J\'ai déjà un compte, me connecter'}
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (props.error) {
+    errorMessage = (
+      <p>{props.error.message}</p>
+    );
+  }
+
+  if (props.isAuthenticated) {
+    formDisplay = (
+      <div>
+        <p>Vous avez bien été connecté !</p>
+        <Button type="a"
+                style="default"
+                href="/">
+          Retourner à l'accueil
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {errorMessage}
+
+      <form onSubmit={submitHandler}>
+        <h1>{isSignin ? 'Connexion' : 'Je crée mon compte'}</h1>
+
+        {formDisplay}
       </form>
     </div>
   );
@@ -153,4 +165,4 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(AuthentificationForm);
+export default connect(mapStateToProps, mapDispatchToProps)(ConnexionForm);

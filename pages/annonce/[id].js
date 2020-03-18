@@ -6,6 +6,7 @@ import React from 'react';
 import {API_BASE_URL} from '../../shared/contants';
 // Why standard fetch doesn't work ?
 import fetch from 'node-fetch';
+import withAuth from '../../hoc/withAuth/withAuth';
 
 const Index = (props) => {
   const router = useRouter();
@@ -57,4 +58,4 @@ export async function getStaticProps({ params }) {
   return { props: { offer, id: params.id } };
 }
 
-export default Index;
+export default withAuth(Index);

@@ -99,6 +99,7 @@ const postOfferSuccess = (state, action) => {
 };
 
 const postOfferFail = (state, action) => {
+  console.log('postOfferFail');
   return updateObject(state, {
     loading: false,
     apiState: updateApiState(state.apiState, API_STATE_ACTION.postOffer, {

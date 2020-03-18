@@ -4,6 +4,7 @@ import OfferList from '../components/Offer/OfferList/OfferList';
 import fetch from 'node-fetch';
 import {API_BASE_URL} from '../shared/contants';
 import {sanitizeOffers} from '../shared/utility';
+import withAuth from '../hoc/withAuth/withAuth';
 
 const Annonces = (props) => {
   return (
@@ -24,4 +25,4 @@ export async function getStaticProps() {
 }
 
 
-export default Annonces;
+export default withAuth(Annonces);
