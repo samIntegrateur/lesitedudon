@@ -1,7 +1,6 @@
 import React from 'react';
 import Layout from '../layout/Layout';
-import ConnexionForm from '../components/Connexion/ConnexionForm/ConnexionForm';
-import withAuth from '../hoc/withAuth/withAuth';
+import ConnexionForm from '../components/Authentification/ConnexionForm/ConnexionForm';
 
 const Connexion = () => {
   return (
@@ -16,4 +15,4 @@ const Connexion = () => {
   );
 };
 
-export default withAuth(Connexion);
+export default Connexion;

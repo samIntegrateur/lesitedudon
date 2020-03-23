@@ -1,25 +1,19 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import Link from 'next/link';
 import Layout from '../layout/Layout';
-import withAuth from '../hoc/withAuth/withAuth';
+
+import FirebaseContext from '../firebase/context';
 
 const Index = (props) => {
+  const {firebase, user} = useContext(FirebaseContext);
 
-  console.log('props', props);
   return (
 
     <Layout
       title="Le site du don"
       description="Site de dons d'objets. Offrez les objets qui vous encombrent et récupérez gratuitement ceux des autres">
 
-      {/*<p>*/}
-      {/*  Suis-je connecté ?*/}
-      {/*  <strong>*/}
-      {/*    {props.isAuthenticated ? 'oui' : 'non'}*/}
-      {/*  </strong>*/}
-      {/*</p>*/}
-
-      {props.isAuthenticated &&
+      {!!user &&
         <div>
           <h2>Créer une annonce</h2>
           <Link href="/creer-une-annonce"><a>Créer une annonce</a></Link>
@@ -37,4 +31,5 @@ const Index = (props) => {
   );
 };
 
-export default withAuth(Index);
+// export default withAuth(Index);
+export default Index;

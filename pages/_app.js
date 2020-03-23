@@ -3,6 +3,7 @@ import 'normalize.css/normalize.css';
 import '../public/style/global.css';
 import {Provider} from 'react-redux';
 import {makeStore} from '../store/store';
+import {FirebaseContext, useAuth} from '../firebase';
 
 // function MyApp({ Component, pageProps }) {
 //   return <Component {...pageProps} />
@@ -24,9 +25,13 @@ import {makeStore} from '../store/store';
 const store = makeStore();
 
 function MyApp({ Component, pageProps }) {
+  const {user, firebase, loading} = useAuth();
+
   return (
     <Provider store={store}>
-      <Component {...pageProps} />
+      <FirebaseContext.Provider value={{user, firebase, loading}}>
+        <Component {...pageProps} />
+      </FirebaseContext.Provider>
     </Provider>
   );
 }

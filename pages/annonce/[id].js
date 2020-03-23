@@ -1,12 +1,10 @@
-import Link from 'next/link';
 import { useRouter } from 'next/router'
 import Layout from '../../layout/Layout';
 import OfferDetail from '../../components/Offer/OfferDetail/OfferDetail';
 import React from 'react';
-import {API_BASE_URL} from '../../shared/contants';
-// Why standard fetch doesn't work ?
+import {FIRESTORE_BASE_URL} from '../../shared/contants';
 import fetch from 'node-fetch';
-import withAuth from '../../hoc/withAuth/withAuth';
+import {getOffersIds, sanitizeOffer} from '../../shared/utility';
 
 const Index = (props) => {
   const router = useRouter();
@@ -18,7 +16,6 @@ const Index = (props) => {
       title={dynamicTitle}
       description={dynamicTitle}>
 
-      {console.log(props)}
       <OfferDetail id={props.id} offer={props.offer} />
 
       <a onClick={router.back}>Retour</a>
@@ -27,19 +24,14 @@ const Index = (props) => {
 };
 
 
-// This function gets called at build time
 export async function getStaticPaths() {
-  // Call an external API endpoint to get posts
-  const res = await fetch(`${API_BASE_URL}offers.json`);
-  const posts = await res.json();
-  const postsIds = [];
-  for (let key in posts) {
-    postsIds.push(key);
-  }
+  const res = await fetch(`${FIRESTORE_BASE_URL}databases/(default)/documents/offers`);
+  const offers = await res.json();
+  const offersIds = getOffersIds(offers);
 
   // Get the paths we want to pre-render based on posts
-  const paths = postsIds.map(postId => ({
-    params: {id: postId}
+  const paths = offersIds.map(offersId => ({
+    params: {id: offersId}
   }));
 
   // We'll pre-render only these paths at build time.
@@ -48,14 +40,10 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  console.log('getStaticProps');
-  // params contains the post `id`.
-  // If the route is like /posts/1, then params.id is 1
-  const res = await fetch(`${API_BASE_URL}offers/${params.id}.json`);
+  const res = await fetch(`${FIRESTORE_BASE_URL}databases/(default)/documents/offers/${params.id}`);
   const offer = await res.json();
-
-  // Pass post data to the page via props
-  return { props: { offer, id: params.id } };
+  const sanitizedOffer = sanitizeOffer(offer);
+  return { props: { offer: sanitizedOffer, id: params.id } };
 }
 
-export default withAuth(Index);
+export default Index;

@@ -31,4 +31,5 @@ const CreerUneAnnonce = (props) => {
   );
 };
 
-export default withAuth(CreerUneAnnonce);
+// export default withAuth(CreerUneAnnonce);
+export default CreerUneAnnonce;

@@ -1,5 +1,6 @@
 import React from 'react';
 import classes from './OfferPreview.module.css';
+import DateTime from '../../UI/DateTime/DateTime';
 
 const OfferPreview = ({offer}) => {
 
@@ -7,11 +8,11 @@ const OfferPreview = ({offer}) => {
     <article className={classes.offerPreview}>
       <figure className={classes.offerPreview_media}>
         <img className={classes.offerPreview_img}
-          src={`https://picsum.photos/id/10/600`} alt="Aperçu objet"/>
+          src={offer.imageUrl} alt="Aperçu objet"/>
       </figure>
       <div className={classes.offerPreview_content}>
         <h2 className={classes.offerPreview_title}>{offer.title}</h2>
-          {offer.creationDate}
+        <DateTime date={offer.updateTime} />
       </div>
     </article>
   );

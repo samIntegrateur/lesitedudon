@@ -2,9 +2,8 @@ import React from 'react';
 import Layout from '../layout/Layout';
 import OfferList from '../components/Offer/OfferList/OfferList';
 import fetch from 'node-fetch';
-import {API_BASE_URL} from '../shared/contants';
+import {FIRESTORE_BASE_URL} from '../shared/contants';
 import {sanitizeOffers} from '../shared/utility';
-import withAuth from '../hoc/withAuth/withAuth';
 
 const Annonces = (props) => {
   return (
@@ -17,12 +16,14 @@ const Annonces = (props) => {
   );
 };
 
-export async function getStaticProps() {
-  const res = await fetch(`${API_BASE_URL}offers.json`);
+export async function getStaticProps(context) {
+  const res = await fetch(`${FIRESTORE_BASE_URL}databases/(default)/documents/offers`);
   const offers = await res.json();
   const sanitizedOffers = sanitizeOffers(offers);
-  return { props: { offers: sanitizedOffers } };
+
+  return {
+    props: {offers: sanitizedOffers},
+  }
 }
 
-
-export default withAuth(Annonces);
+export default Annonces;

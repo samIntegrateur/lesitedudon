@@ -1,17 +1,34 @@
-import React, {useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
+import FirebaseContext from '../../../firebase/context';
 import {checkValidity, updateObject} from '../../../shared/utility';
-import Input from '../../UI/Input/Input';
-import Spinner from '../../UI/Spinner/Spinner';
 import Button from '../../UI/Button/Button';
-import * as actions from '../../../store/actions/';
-import {connect} from 'react-redux';
+import Spinner from '../../UI/Spinner/Spinner';
+import Input from '../../UI/Input/Input';
 
-const ConnexionForm = (props) => {
+// todo refactor as it's similar to connexion, use classes ?
+const InscriptionForm = () => {
 
   let formDisplay = null;
   let errorMessage = null;
 
+  const {firebase} = useContext(FirebaseContext);
+
+  // todo check username unicity
   const [controls, setControls] = useState({
+    username: {
+      elementType: 'input',
+      elementConfig: {
+        type: 'text',
+        placeholder: ''
+      },
+      label: 'Pseudo',
+      value: '',
+      validation: {
+        required: true,
+      },
+      valid: false,
+      touched: false
+    },
     email: {
       elementType: 'input',
       elementConfig: {
@@ -42,9 +59,35 @@ const ConnexionForm = (props) => {
       valid: false,
       touched: false
     },
+    confirmPassword: {
+      elementType: 'input',
+      elementConfig: {
+        type: 'password',
+        placeholder: ''
+      },
+      label: 'Confirmer mot de passe',
+      value: '',
+      validation: {
+        required: true,
+        minLength: 6
+      },
+      valid: false,
+      touched: false
+    },
   });
+
   const [formIsValid, setFormIsValid] = useState(false);
-  const [isSignin, setIsSignin] = useState(true);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [hasError, setHasError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  let isMounted = true;
+
+  useEffect(() => {
+    return () => {
+      isMounted = false;
+    }
+  }, []);
 
   const inputChangedHandler = (event, controlName) => {
     const updatedControls = updateObject(controls, {
@@ -66,11 +109,29 @@ const ConnexionForm = (props) => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onAuth(controls.email.value, controls.password.value, isSignin);
-  };
 
-  const switchAuthModeHandler = () => {
-    setIsSignin(!isSignin);
+    if (controls.password.value === controls.confirmPassword.value) {
+      setIsLoading(true);
+      firebase.register({
+        username: controls.username.value,
+        email: controls.email.value,
+        password: controls.password.value,
+      }).then(() => {
+        if (isMounted) {
+          setIsLoading(false);
+          setIsSuccess(true);
+        }
+      }).catch(e => {
+        if (isMounted) {
+          setIsLoading(false);
+          setHasError(e);
+        }
+      });
+    } else {
+      // todo : this kind of message should be real time
+      const e = { message: 'Les mots de passes ne correspondent pas'};
+      setHasError(e);
+    }
   };
 
   const formElementArray = [];
@@ -81,7 +142,7 @@ const ConnexionForm = (props) => {
     })
   }
 
-  if (props.loading) {
+  if (isLoading) {
     formDisplay = <Spinner />;
   } else {
     formDisplay = (
@@ -92,6 +153,7 @@ const ConnexionForm = (props) => {
               key={formElement.id}
               elementType={formElement.config.elementType}
               elementConfig={formElement.config.elementConfig}
+              label={formElement.config.label}
               value={formElement.config.value}
               invalid={!formElement.config.valid}
               shouldValidate={formElement.config.validation}
@@ -109,26 +171,27 @@ const ConnexionForm = (props) => {
         </Button>
         <div>
           <Button
-            type="button"
-            style="link"
-            clicked={switchAuthModeHandler}>
-            {isSignin ? 'Créer un compte' : 'J\'ai déjà un compte, me connecter'}
+            type="a"
+            href="/connexion"
+            style="link">
+            J'ai déjà un compte, me connecter
           </Button>
         </div>
       </div>
     );
   }
 
-  if (props.error) {
+
+  if (hasError) {
     errorMessage = (
-      <p>{props.error.message}</p>
+      <p>{hasError.message}</p>
     );
   }
 
-  if (props.isAuthenticated) {
+  if (isSuccess) {
     formDisplay = (
       <div>
-        <p>Vous avez bien été connecté !</p>
+        <p>Votre compte a bien été créé&nbsp;! Vous êtes désormais connecté.</p>
         <Button type="a"
                 style="default"
                 href="/">
@@ -140,29 +203,15 @@ const ConnexionForm = (props) => {
 
   return (
     <div>
+      <h1>Je crée mon compte</h1>
+
       {errorMessage}
 
       <form onSubmit={submitHandler}>
-        <h1>{isSignin ? 'Connexion' : 'Je crée mon compte'}</h1>
-
         {formDisplay}
       </form>
     </div>
   );
 };
 
-const mapStateToProps = state => {
-  return {
-    loading: state.auth.loading,
-    error: state.auth.error,
-    isAuthenticated: state.auth.token !== null,
-  };
-};
-
-const mapDispatchToProps = dispatch => {
-  return {
-    onAuth: (email, password, isSignin) => dispatch(actions.auth(email, password, isSignin)),
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ConnexionForm);
+export default InscriptionForm;

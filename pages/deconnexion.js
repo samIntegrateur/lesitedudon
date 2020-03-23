@@ -1,33 +1,64 @@
-import React, {useEffect} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import Layout from '../layout/Layout';
-import {connect} from 'react-redux';
-import * as actions from '../store/actions/';
 import Button from '../components/UI/Button/Button';
 import Spinner from '../components/UI/Spinner/Spinner';
+import FirebaseContext from '../firebase/context';
 
-const Deconnexion = (props) => {
+const Deconnexion = () => {
 
   let display = null;
 
-  const {onLogout} = props;
+  const {firebase, user} = useContext(FirebaseContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(null);
+  let isMounted = true;
 
   useEffect(() => {
-    onLogout();
-  }, [onLogout]);
+    return () => {
+      isMounted = false;
+    }
+  }, []);
 
-  if (props.isAuthenticated) {
-    display = Spinner;
+  useEffect(() => {
+    if (!!firebase) {
+      setIsLoading(true);
+      firebase.logout()
+        .then(() => {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }).catch(e => {
+          if (isMounted) {
+            setIsLoading(false);
+            setHasError(e);
+          }
+        });
+    }
+  }, [firebase]);
+
+
+
+
+  if (!!user || isLoading) {
+    display = <Spinner />;
   } else {
-    display = (
-      <div>
-        <p>Vous avez bien été déconnecté !</p>
-        <Button type="a"
-                style="default"
-                href="/">
-          Retourner à l'accueil
-        </Button>
-      </div>
-    );
+
+    if (hasError) {
+      display = (
+        <p>{hasError.message}</p>
+      );
+    } else {
+      display = (
+        <div>
+          <p>Vous avez bien été déconnecté !</p>
+          <Button type="a"
+                  style="default"
+                  href="/">
+            Retourner à l'accueil
+          </Button>
+        </div>
+      );
+    }
   }
 
   return (
@@ -39,16 +70,4 @@ const Deconnexion = (props) => {
   );
 };
 
-const mapStateToProps = state => {
-  return {
-    isAuthenticated: state.auth.token !== null,
-  };
-};
-
-const mapDispatchToProps = dispatch => {
-  return {
-    onLogout: () => dispatch(actions.logout())
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Deconnexion);
+export default Deconnexion;

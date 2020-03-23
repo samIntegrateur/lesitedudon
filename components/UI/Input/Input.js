@@ -49,6 +49,7 @@ const Input = (props) => {
 
   return (
     <div className={formGroupClasses.join(' ')}>
+      {/*todo add id and for*/}
       <label className={classes.formGroup__label}>{props.label}</label>
       {inputElement}
     </div>

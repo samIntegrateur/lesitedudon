@@ -1,9 +1,9 @@
 .loader {
     font-size: 10px;
-    margin: 50px auto;
+    margin: 4rem auto;
     text-indent: -9999em;
-    width: 11em;
-    height: 11em;
+    width: 10em;
+    height: 10em;
     border-radius: 50%;
     background: #000000;
     background: linear-gradient(to right, #000000 10%, rgba(0,0,0, 0) 42%);
@@ -36,6 +36,26 @@
     bottom: 0;
     right: 0;
 }
+
+.loaderSmall {
+    width: 4em;
+    height: 4em;
+    margin: 0 auto;
+}
+
+.loaderPrimary {
+    background: #fff;
+    background: linear-gradient(to right, #fff 10%, rgba(255, 255, 255, 0) 42%);
+}
+
+.loaderPrimary:after {
+    background-color: var(--primary-color);
+}
+
+.loaderPrimary:before {
+    background-color: #fff;
+}
+
 
 @-webkit-keyframes load3 {
     0% {
