@@ -1,0 +1,17 @@
+{
+  "extends": "stylelint-config-standard",
+  "plugins": [
+    "stylelint-media-use-custom-media"
+  ],
+  "rules": {
+    "max-nesting-depth": 3,
+    "selector-nested-pattern": "^&",
+    "media-feature-name-no-unknown": ["/^--/"],
+    "csstools/media-use-custom-media": "always",
+    "custom-property-empty-line-before": null,
+    "rule-empty-line-before": null,
+    "at-rule-empty-line-before": null,
+    "max-empty-lines": null,
+    "block-no-empty": null
+  }
+}
