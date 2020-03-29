@@ -1,5 +1,3 @@
-// Before this, import what you need and create a root saga as usual
-
 import createSagaMiddleware from 'redux-saga';
 import {applyMiddleware, combineReducers, createStore} from 'redux';
 import {watchOffer, watchAuth} from './sagas';
@@ -8,6 +6,9 @@ import thunk from 'redux-thunk';
 import {composeWithDevTools} from 'redux-devtools-extension/developmentOnly';
 import authReducer from './reducers/auth';
 
+// todo : cleanup
+// a lot of actions aren't used anymore since with use firebase client (with context) instead of rest api
+// Maybe keep a store for post actions ?
 export const makeStore = (initialState, options) => {
   // 1: Create the middleware
   const sagaMiddleware = createSagaMiddleware();

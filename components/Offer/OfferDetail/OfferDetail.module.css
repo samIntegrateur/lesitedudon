@@ -29,6 +29,13 @@
     margin-bottom: 0;
   }
 
+  @media (--min-width-md) {
+    .offer__medias {
+      flex-basis: 50%;
+      padding-right: var(--space-xl);
+    }
+  }
+
   .offer__media {
     height: 25rem;
     display: flex;
@@ -46,13 +53,12 @@
 }
 
 .offer__content {
-  flex: 0 0 100%;
+  flex: 1 0 100%;
 }
 
 @media (--min-width-md) {
   .offer__content {
     flex-basis: 50%;
-    padding-left: var(--space-xl);
   }
 }
 

@@ -15,12 +15,14 @@ const OfferDetail = (props) => {
             {offer.title}
           </h1>
         </header>
-        <section className={classes.offer__medias}>
-          <figure className={classes.offer__media}>
-            <img className={classes.offer__img}
-                 src={offer.imageUrl} alt="Aperçu objet" />
-          </figure>
-        </section>
+        {!!offer.imageUrl &&
+          <section className={classes.offer__medias}>
+            <figure className={classes.offer__media}>
+              <img className={classes.offer__img}
+                 src={offer.imageUrl} alt="Aperçu objet"/>
+            </figure>
+          </section>
+        }
         <div className={classes.offer__content}>
           <div className={classes.offer__infos}>
             <DateTime date={offer.updateTime} />

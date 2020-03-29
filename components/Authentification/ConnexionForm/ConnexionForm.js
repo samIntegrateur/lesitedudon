@@ -1,5 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {checkValidity, updateObject} from '../../../shared/utility';
+import {updateObject} from '../../../shared/utility';
+import {checkValidity} from '../../../shared/form-utils';
 import Input from '../../UI/Input/Input';
 import Spinner from '../../UI/Spinner/Spinner';
 import Button from '../../UI/Button/Button';
@@ -59,11 +60,14 @@ const ConnexionForm = () => {
   }, []);
 
   const inputChangedHandler = (event, controlName) => {
+    const errors = checkValidity(event.target.value, controls[controlName].validation);
+
     const updatedControls = updateObject(controls, {
       [controlName]: updateObject(controls[controlName], {
         value: event.target.value,
-        valid: checkValidity(event.target.value, controls[controlName].validation),
+        valid: errors.length === 0,
         touched: true,
+        errors: errors,
       })
     });
 
@@ -117,8 +121,10 @@ const ConnexionForm = () => {
               elementConfig={formElement.config.elementConfig}
               label={formElement.config.label}
               value={formElement.config.value}
+              errors={formElement.config.errors}
               invalid={!formElement.config.valid}
               shouldValidate={formElement.config.validation}
+              required={formElement.config.validation && formElement.config.validation.required}
               touched={formElement.config.touched}
               changed={(event) => inputChangedHandler(event, formElement.id)}
             />
@@ -145,7 +151,7 @@ const ConnexionForm = () => {
 
   if (hasError) {
     errorMessage = (
-      <p>{hasError.message}</p>
+      <p className="error">{hasError.message}</p>
     );
   }
 

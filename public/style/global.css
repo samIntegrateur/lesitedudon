@@ -148,3 +148,19 @@ img {
   display: block;
   max-width: 100%;
 }
+
+.error {
+  color: #ff4341;
+}
+
+.errors {
+  color: #ff4341;
+
+  &:not(:first-child) {
+    margin-top: var(--space-sm);
+  }
+
+  & p {
+    margin: 0;
+  }
+}

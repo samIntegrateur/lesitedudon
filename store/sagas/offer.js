@@ -30,23 +30,23 @@ export function* fetchOfferSaga(action) {
   }
 }
 
-export function* postOfferSaga(action) {
+export function* postOfferSaga({offer, firebase}) {
+  console.log('postOfferSaga');
+
   yield put(actions.postOfferStart());
 
   try {
-    const response = yield call(fetch, `${API_BASE_URL}offers.json?auth=${action.token}`, {
-      method: 'POST',
-      body: JSON.stringify(action.offer),
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const responseBody = yield response.json();
-    if (responseBody.error) {
-      console.log('responseBody error', responseBody);
-      yield put(actions.postOfferFail(responseBody.error));
+    console.log('try');
+    const response = yield call(firebase.postOffer, offer);
+    // const responseBody = yield response.json();
+    if (response.error) {
+      console.log('resp err', error);
+      yield put(actions.postOfferFail(response.error));
     } else {
       yield put(actions.postOfferSuccess());
     }
   } catch (error) {
+    console.log('catch', error);
     yield put(actions.postOfferFail(error));
   }
 }

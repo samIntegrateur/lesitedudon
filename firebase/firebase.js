@@ -12,11 +12,11 @@ class Firebase {
     }
   }
 
-  async login({email, password}) {
+  login = async ({email, password}) => {
     return this.auth.signInWithEmailAndPassword(email, password);
-  }
+  };
 
-  async register({username, email, password}) {
+  register = async({username, email, password}) => {
     // 1 create user
     await this.auth.createUserWithEmailAndPassword(email, password);
 
@@ -27,22 +27,33 @@ class Firebase {
     return createProfileCallable({
       username
     })
-  }
+  };
 
-  async logout() {
+  logout = async () => {
     await this.auth.signOut();
-  }
+  };
 
-  getUserProfile({userId, onSnapshot}) {
+  getUserProfile = ({userId, onSnapshot}) => {
     return this.db.collection('publicProfiles')
       .where('userId', '==', userId)
       .limit(1)
       .onSnapshot(onSnapshot);
-  }
+  };
 
-  async getOffers({}) {
+  getOffers = async ({}) => {
     return this.db.collection('offers').get();
-  }
+  };
+
+  postOffer = async ({title, description, image = null}) => {
+    console.log('will call function');
+    console.log('image', image);
+    const postOfferCallable = this.functions.httpsCallable('postOffer');
+    return postOfferCallable({
+      title,
+      description,
+      image,
+    })
+  };
 }
 
 let firebaseInstance;

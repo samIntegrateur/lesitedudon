@@ -1,35 +1,35 @@
-import React, {useEffect} from 'react';
+import React, {useContext, useEffect} from 'react';
 import Layout from '../layout/Layout';
 import OfferForm from '../components/Offer/OfferForm/OfferForm';
-import withAuth from '../hoc/withAuth/withAuth';
 import { useRouter } from 'next/router';
+import FirebaseContext from '../firebase/context';
 
-// "Private" page : if first check has been made and isAuthenticated is false, redirect
+// "Private" page : if not authenticated, redirect
 // todo: add server side guard : https://sergiodxa.com/articles/redirects-in-next-the-good-way/
-const CreerUneAnnonce = (props) => {
+const CreerUneAnnonce = () => {
   const router = useRouter();
-  const {firstCheck, isAuthenticated} = props;
+  const {loading, user} = useContext(FirebaseContext);
+
 
   useEffect(() => {
-    if (firstCheck && !isAuthenticated) {
+    if (!loading && !user) {
       router.replace('/connexion');
     }
-  }, [firstCheck, isAuthenticated]);
+  }, [user, loading]);
 
   return (
     <Layout
       title="Créer une annonce - Le site du don"
       description="Créez une nouvelle annonce pour donner gratuitement un objet">
 
-      { props.isAuthenticated &&
+      { !!user &&
         <div>
           <h1>Créer une annonce</h1>
-          <OfferForm />
+          <OfferForm user={user} />
         </div>
       }
     </Layout>
   );
 };
 
-// export default withAuth(CreerUneAnnonce);
 export default CreerUneAnnonce;

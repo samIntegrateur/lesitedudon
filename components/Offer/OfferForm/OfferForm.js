@@ -1,15 +1,44 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import Input from '../../UI/Input/Input';
-import {checkValidity, updateObject} from '../../../shared/utility';
+import {updateObject} from '../../../shared/utility';
+import {checkValidity} from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import * as actions from '../../../store/actions';
 import {connect} from 'react-redux';
+import FirebaseContext from '../../../firebase/context';
+
+let fileReader;
+// fix for netlify
+// https://www.udemy.com/course/gatsby-js-firebase-hybrid-realtime-static-sites/learn/lecture/16186367#questions
+if (typeof window !== 'undefined') {
+  fileReader = new FileReader()
+}
 
 const OfferForm = (props) => {
   let formDisplay = null;
 
-  const {loading, error, success, onPostOffer, onPostOfferClear, userId, token} = props;
+  const {user, firebase} = useContext(FirebaseContext);
+  const {loading, error, success, onPostOffer, onPostOfferClear} = props;
+  const [image, setImage] = useState('');
+
+  useEffect(() => {
+    if (fileReader) {
+      fileReader.addEventListener('load', fileReaderLoadHandler);
+    }
+
+    return () => {
+      if (fileReader) {
+        fileReader.removeEventListener('load', fileReaderLoadHandler);
+      }
+    }
+  }, [fileReader]);
+
+  const fileReaderLoadHandler = (e) => {
+    console.log('e', e);
+    console.log('fileReader result', fileReader.result);
+    setImage(fileReader.result);
+  };
 
   useEffect(() => {
     return () => {
@@ -17,9 +46,11 @@ const OfferForm = (props) => {
     }
   }, [onPostOfferClear]);
 
+  // todo : add input type validator
+  // and error messages strategy for all fields
   const [offerForm, setOfferForm] = useState({
     title: {
-      label: 'Titre de l\'annonce',
+      label: 'Titre',
       elementType: 'input',
       elementConfig: {
         type: 'text',
@@ -30,10 +61,11 @@ const OfferForm = (props) => {
         required: true
       },
       valid: false,
-      touched: false
+      touched: false,
+      errors: [],
     },
     description: {
-      label: 'Description de l\'annonce',
+      label: 'Description',
       elementType: 'textarea',
       elementConfig: {
         placeholder: ''
@@ -43,18 +75,58 @@ const OfferForm = (props) => {
         required: true
       },
       valid: false,
-      touched: false
+      touched: false,
+      errors: [],
+    },
+    image: {
+      label: 'Uploader une image',
+      elementType: 'input',
+      elementConfig: {
+        type: 'file',
+        placeholder: '',
+        accept: 'image/png, image/jpeg, image/jpg'
+      },
+      value: '',
+      file: '',
+      validation: {
+        required: false,
+        fileExtension: [
+          'image/png',
+          'image/jpg',
+          'image/jpeg'
+        ],
+        fileMaxSize: 10
+      },
+      valid: false,
+      touched: false,
+      errors: [],
     },
   });
 
   const [formIsValid, setFormIsValid] = useState(false);
 
   const inputChangedHandler = (event, inputIdentifier) => {
-    const updatedFormElement = updateObject(offerForm[inputIdentifier], {
+    event.persist();
+
+    if (inputIdentifier === 'image') {
+      fileReader.readAsDataURL(event.target.files[0]);
+    }
+
+    const errors = checkValidity(
+      event.target.value,
+      offerForm[inputIdentifier].validation,
+      inputIdentifier === 'image' ? event.target.files[0] : null
+    );
+
+    const updatedProperties = {
       value: event.target.value,
-      valid: checkValidity(event.target.value, offerForm[inputIdentifier].validation),
+      valid: errors.length === 0,
       touched: true,
-    });
+      errors: errors,
+    };
+
+    const updatedFormElement = updateObject(offerForm[inputIdentifier], updatedProperties);
+
     const updatedOrderForm = updateObject(offerForm, {
       [inputIdentifier]: updatedFormElement
     });
@@ -73,12 +145,20 @@ const OfferForm = (props) => {
 
     const formData = {};
     for (let formElementIdentifier in offerForm) {
-      formData[formElementIdentifier] = offerForm[formElementIdentifier].value;
+      if (formElementIdentifier === 'image') {
+        console.log('image');
+        if (image) {
+          console.log('image true');
+          formData[formElementIdentifier] = image;
+        }
+      } else {
+        formData[formElementIdentifier] = offerForm[formElementIdentifier].value;
+      }
     }
-    formData.creationDate = new Date();
-    formData.userId = userId;
 
-    onPostOffer(formData, token);
+    console.log('formData', formData);
+
+    onPostOffer(formData, firebase);
   };
 
   // Format offerForm for jsx
@@ -96,7 +176,15 @@ const OfferForm = (props) => {
     if (success) {
       formDisplay = (
         <div>
-          <p>Votre annonce a bien été publiée !</p>
+          <p>Votre annonce a bien été publiée&nbsp;!</p>
+
+          {/*todo: get id to display link */}
+          {/*<Button type="a"*/}
+          {/*        style="default"*/}
+          {/*        href={`/annonce/[id]`} as={`/annonce/${offer.id}`}>*/}
+          {/*  Voir mon annonce*/}
+          {/*</Button>*/}
+
           <Button type="a"
                   style="default"
                   href="/">
@@ -109,9 +197,8 @@ const OfferForm = (props) => {
         <div>
           <p>Une erreur s'est produite, votre annonce n'a pu être publiée.</p>
 
-          <p>
-            {error}
-          </p>
+          {error.message ? <p className="error">{error.message}</p> : null}
+
           {/*<Button type="a"*/}
           {/*        style="default"*/}
           {/*        clicked={setPostError(false)}>*/}
@@ -134,8 +221,10 @@ const OfferForm = (props) => {
               elementType={formElement.config.elementType}
               elementConfig={formElement.config.elementConfig}
               value={formElement.config.value}
+              errors={formElement.config.errors}
               invalid={!formElement.config.valid}
               shouldValidate={formElement.config.validation}
+              required={formElement.config.validation && formElement.config.validation.required}
               touched={formElement.config.touched}
               changed={(event) => inputChangedHandler(event, formElement.id)}
             />
@@ -151,6 +240,7 @@ const OfferForm = (props) => {
                   disabled={!formIsValid}>
             Publier l'annonce
           </Button>
+
         </form>
       );
     }
@@ -165,14 +255,12 @@ const mapStateToProps = state => {
     loading: state.offer.loading,
     error: state.offer.apiState.postOffer.error,
     success: state.offer.apiState.postOffer.success,
-    userId: state.auth.userId,
-    token: state.auth.token,
   }
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    onPostOffer: (offer, token) => dispatch(actions.postOffer(offer, token)),
+    onPostOffer: (offer, firebase) => dispatch(actions.postOffer(offer, firebase)),
     onPostOfferClear: () => dispatch(actions.postOfferClear()),
   }
 };

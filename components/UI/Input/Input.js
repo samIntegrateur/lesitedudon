@@ -50,8 +50,24 @@ const Input = (props) => {
   return (
     <div className={formGroupClasses.join(' ')}>
       {/*todo add id and for*/}
-      <label className={classes.formGroup__label}>{props.label}</label>
+      {/*todo add helpers like max size and authorized file ext */}
+      <label className={classes.formGroup__label}>
+        {props.label}
+        {!!props.required &&
+          <span>*</span>
+        }
+      </label>
       {inputElement}
+      {!!props.errors && !!props.errors.length &&
+        <div className="errors" style={{'color': 'red'}}>
+          {props.errors.map(error => (
+            <p key={error}>
+              {error}
+            </p>
+          ))}
+        </div>
+      }
+
     </div>
   );
 };

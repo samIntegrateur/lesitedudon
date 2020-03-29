@@ -3,6 +3,8 @@ import * as actions from '../../store/actions';
 import {connect} from 'react-redux';
 import {compose} from 'redux';
 
+// not used anymore
+// todo: delete it or refactor it to be used with firebase plugin
 const withAuth = (WrappedComponent) => {
   return (props) => {
 

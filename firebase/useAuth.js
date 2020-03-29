@@ -26,13 +26,13 @@ function useAuth() {
               setLoading(true);
               firebaseInstance.auth.currentUser.getIdTokenResult(true)
                 .then(token => {
-                  setLoading(false);
                   setUser({
                     ...userResult,
                     // custom claims provided in our cloud functions
                     isAdmin: token.claims.admin,
                     username: r.empty ? null : r.docs[0].id
                   });
+                  setLoading(false);
                 }).catch(e => {
                   setLoading(false);
                 });
