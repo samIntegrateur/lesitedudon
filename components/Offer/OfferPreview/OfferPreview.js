@@ -4,12 +4,14 @@ import DateTime from '../../UI/DateTime/DateTime';
 
 const OfferPreview = ({offer}) => {
 
+  const imageSrc = offer.thumbUrl || offer.imageUrl || null;
+
   return (
     <article className={classes.offerPreview}>
-      {!!offer.imageUrl &&
+      {!!imageSrc &&
         <figure className={classes.offerPreview_media}>
           <img className={classes.offerPreview_img}
-               src={offer.imageUrl} alt="Aperçu objet" />
+               src={imageSrc} alt="Aperçu objet" />
         </figure>
       }
       <div className={classes.offerPreview_content}>

@@ -95,7 +95,10 @@ const OfferForm = (props) => {
           'image/jpg',
           'image/jpeg'
         ],
-        fileMaxSize: 10
+        // nb: base64 upload seems to be limited to 10mo with firebase cloud functions
+        // as a base64 is ~33% bigger than the original, we keep a margin
+        // https://stackoverflow.com/questions/34109053/what-file-size-is-data-if-its-450kb-base64-encoded
+        fileMaxSize: 7
       },
       valid: false,
       touched: false,
