@@ -41,8 +41,18 @@ const Header = () => {
               </a>
             </Link>
           </div>
+          {/* todo: make a nav component and less ugly */}
           <nav className={classes.header__nav}>
             <ul className={classes.header__navList}>
+
+              {!!user &&
+                <li className={classes.header__navListItem}>
+                  <Link href="/compte">
+                    <a className={classes.header__navLink}>Mon Profil</a>
+                  </Link>
+                </li>
+              }
+
               <li className={classes.header__navListItem}>
                 {display}
               </li>

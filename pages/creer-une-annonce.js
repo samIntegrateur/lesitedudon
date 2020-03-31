@@ -10,7 +10,6 @@ const CreerUneAnnonce = () => {
   const router = useRouter();
   const {loading, user} = useContext(FirebaseContext);
 
-
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/connexion');
