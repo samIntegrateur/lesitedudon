@@ -31,22 +31,18 @@ export function* fetchOfferSaga(action) {
 }
 
 export function* postOfferSaga({offer, firebase}) {
-  console.log('postOfferSaga');
 
   yield put(actions.postOfferStart());
 
   try {
-    console.log('try');
     const response = yield call(firebase.postOffer, offer);
     // const responseBody = yield response.json();
     if (response.error) {
-      console.log('resp err', error);
       yield put(actions.postOfferFail(response.error));
     } else {
-      yield put(actions.postOfferSuccess());
+      yield put(actions.postOfferSuccess(response.data));
     }
   } catch (error) {
-    console.log('catch', error);
     yield put(actions.postOfferFail(error));
   }
 }

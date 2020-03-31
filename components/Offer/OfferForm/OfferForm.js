@@ -18,7 +18,7 @@ const OfferForm = (props) => {
   let formDisplay = null;
 
   const {firebase} = useContext(FirebaseContext);
-  const {loading, error, success, onPostOffer, onPostOfferClear} = props;
+  const {loading, error, success, postId, onPostOffer, onPostOfferClear} = props;
   const [image, setImage] = useState('');
 
   useEffect(() => {
@@ -152,12 +152,11 @@ const OfferForm = (props) => {
         <div>
           <p>Votre annonce a bien été publiée&nbsp;!</p>
 
-          {/*todo: get id to display link */}
-          {/*<Button type="a"*/}
-          {/*        style="default"*/}
-          {/*        href={`/annonce/[id]`} as={`/annonce/${offer.id}`}>*/}
-          {/*  Voir mon annonce*/}
-          {/*</Button>*/}
+          <Button type="a"
+                  style="default"
+                  href={`/annonce/[id]`} as={`/annonce/${postId}`}>
+            Voir mon annonce
+          </Button>
 
           <Button type="a"
                   style="default"
@@ -224,6 +223,7 @@ const mapStateToProps = state => {
     loading: state.offer.loading,
     error: state.offer.apiState.postOffer.error,
     success: state.offer.apiState.postOffer.success,
+    postId: state.offer.apiState.postOffer.postId,
   }
 };
 

@@ -21,6 +21,7 @@ const initialState = {
     postOffer: {
       error: null,
       success: false,
+      postId: null,
     },
   },
 };
@@ -94,6 +95,7 @@ const postOfferSuccess = (state, action) => {
     loading: false,
     apiState: updateApiState(state.apiState, API_STATE_ACTION.postOffer, {
       success: true,
+      postId: action.id,
     })
   });
 };
@@ -112,6 +114,7 @@ const postOfferClear = (state, action) => {
     apiState: updateApiState(state.apiState, 'postOffer', {
       error: null,
       success: false,
+      postId: null,
     })
   });
 };

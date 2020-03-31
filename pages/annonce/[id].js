@@ -40,8 +40,10 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
+  console.log('params', params);
   const res = await fetch(`${FIRESTORE_BASE_URL}databases/(default)/documents/offers/${params.id}`);
   const offer = await res.json();
+  console.log('offer', offer);
   const sanitizedOffer = sanitizeOffer(offer);
   return { props: { offer: sanitizedOffer, id: params.id } };
 }

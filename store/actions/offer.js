@@ -70,9 +70,10 @@ export const postOfferStart = () => {
   }
 };
 
-export const postOfferSuccess = () => {
+export const postOfferSuccess = (id) => {
   return {
     type: actionTypes.POST_OFFER_SUCCESS,
+    id,
   }
 };
 

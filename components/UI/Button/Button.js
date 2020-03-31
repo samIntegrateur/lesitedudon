@@ -33,7 +33,7 @@ const Button = (props) => {
   switch (props.type) {
     case ('a'):
       buttonElement = (
-        <Link href={props.href ? props.href : '/'}>
+        <Link href={props.href ? props.href : '/'} as={props.as ? props.as : null}>
           <a {...argsList}>
             {props.children}
           </a>
