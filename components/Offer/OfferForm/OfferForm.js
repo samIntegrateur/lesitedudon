@@ -1,7 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
 import Input from '../../UI/Input/Input';
-import {updateObject} from '../../../shared/utility';
-import {checkValidity} from '../../../shared/form-utils';
+import {updateForm} from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import * as actions from '../../../store/actions';
@@ -18,7 +17,7 @@ if (typeof window !== 'undefined') {
 const OfferForm = (props) => {
   let formDisplay = null;
 
-  const {user, firebase} = useContext(FirebaseContext);
+  const {firebase} = useContext(FirebaseContext);
   const {loading, error, success, onPostOffer, onPostOfferClear} = props;
   const [image, setImage] = useState('');
 
@@ -34,9 +33,7 @@ const OfferForm = (props) => {
     }
   }, [fileReader]);
 
-  const fileReaderLoadHandler = (e) => {
-    console.log('e', e);
-    console.log('fileReader result', fileReader.result);
+  const fileReaderLoadHandler = () => {
     setImage(fileReader.result);
   };
 
@@ -46,8 +43,6 @@ const OfferForm = (props) => {
     }
   }, [onPostOfferClear]);
 
-  // todo : add input type validator
-  // and error messages strategy for all fields
   const [offerForm, setOfferForm] = useState({
     title: {
       label: 'Titre',
@@ -100,7 +95,7 @@ const OfferForm = (props) => {
         // https://stackoverflow.com/questions/34109053/what-file-size-is-data-if-its-450kb-base64-encoded
         fileMaxSize: 7
       },
-      valid: false,
+      valid: true,
       touched: false,
       errors: [],
     },
@@ -111,36 +106,12 @@ const OfferForm = (props) => {
   const inputChangedHandler = (event, inputIdentifier) => {
     event.persist();
 
-    if (inputIdentifier === 'image') {
-      fileReader.readAsDataURL(event.target.files[0]);
-    }
-
-    const errors = checkValidity(
-      event.target.value,
-      offerForm[inputIdentifier].validation,
-      inputIdentifier === 'image' ? event.target.files[0] : null
+    const { updatedForm, updatedFormValidity } = updateForm(
+      event, inputIdentifier, offerForm, fileReader
     );
 
-    const updatedProperties = {
-      value: event.target.value,
-      valid: errors.length === 0,
-      touched: true,
-      errors: errors,
-    };
-
-    const updatedFormElement = updateObject(offerForm[inputIdentifier], updatedProperties);
-
-    const updatedOrderForm = updateObject(offerForm, {
-      [inputIdentifier]: updatedFormElement
-    });
-
-    let formIsValid = true;
-    for (let inputIdentifier in updatedOrderForm) {
-      formIsValid = updatedOrderForm[inputIdentifier].valid && formIsValid;
-    }
-
-    setOfferForm(updatedOrderForm);
-    setFormIsValid(formIsValid);
+    setOfferForm(updatedForm);
+    setFormIsValid(updatedFormValidity);
   };
 
   const offerSubmitHandler = (event) => {
@@ -202,11 +173,6 @@ const OfferForm = (props) => {
 
           {error.message ? <p className="error">{error.message}</p> : null}
 
-          {/*<Button type="a"*/}
-          {/*        style="default"*/}
-          {/*        clicked={setPostError(false)}>*/}
-          {/*  Réessayer*/}
-          {/*</Button>*/}
           <Button type="a"
                   style="default"
                   href="/">

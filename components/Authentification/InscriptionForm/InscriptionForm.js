@@ -1,7 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
 import FirebaseContext from '../../../firebase/context';
-import {updateObject} from '../../../shared/utility';
-import {checkValidity} from '../../../shared/form-utils';
+import {updateForm} from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import Input from '../../UI/Input/Input';
@@ -91,25 +90,14 @@ const InscriptionForm = () => {
   }, []);
 
   const inputChangedHandler = (event, controlName) => {
+    event.persist();
 
-    const errors = checkValidity(event.target.value, controls[controlName].validation);
+    const { updatedForm, updatedFormValidity } = updateForm(
+      event, controlName, controls
+    );
 
-    const updatedControls = updateObject(controls, {
-      [controlName]: updateObject(controls[controlName], {
-        value: event.target.value,
-        valid: errors.length === 0,
-        touched: true,
-        errors: errors,
-      })
-    });
-
-    let formIsValid = true;
-    for (let inputIdentifier in updatedControls) {
-      formIsValid = updatedControls[inputIdentifier].valid && formIsValid;
-    }
-
-    setControls(updatedControls);
-    setFormIsValid(formIsValid);
+    setControls(updatedForm);
+    setFormIsValid(updatedFormValidity);
   };
 
   const submitHandler = (event) => {

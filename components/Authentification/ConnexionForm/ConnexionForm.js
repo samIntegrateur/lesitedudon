@@ -1,6 +1,5 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {updateObject} from '../../../shared/utility';
-import {checkValidity} from '../../../shared/form-utils';
+import {updateForm} from '../../../shared/form-utils';
 import Input from '../../UI/Input/Input';
 import Spinner from '../../UI/Spinner/Spinner';
 import Button from '../../UI/Button/Button';
@@ -60,24 +59,14 @@ const ConnexionForm = () => {
   }, []);
 
   const inputChangedHandler = (event, controlName) => {
-    const errors = checkValidity(event.target.value, controls[controlName].validation);
+    event.persist();
 
-    const updatedControls = updateObject(controls, {
-      [controlName]: updateObject(controls[controlName], {
-        value: event.target.value,
-        valid: errors.length === 0,
-        touched: true,
-        errors: errors,
-      })
-    });
+    const { updatedForm, updatedFormValidity } = updateForm(
+      event, controlName, controls
+    );
 
-    let formIsValid = true;
-    for (let inputIdentifier in updatedControls) {
-      formIsValid = updatedControls[inputIdentifier].valid && formIsValid;
-    }
-
-    setControls(updatedControls);
-    setFormIsValid(formIsValid);
+    setControls(updatedForm);
+    setFormIsValid(updatedFormValidity);
   };
 
   const submitHandler = (event) => {

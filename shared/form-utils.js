@@ -1,3 +1,5 @@
+import {updateObject} from './utility';
+
 export const checkValidity = (value, rules, file = null) => {
   const errors = [];
 
@@ -42,4 +44,50 @@ export const checkValidity = (value, rules, file = null) => {
   return errors;
 };
 
-// todo inputChangedHandler
+export const isInputFileAndHasFile = (form, inputIdentifier, files) => {
+  return (
+    form[inputIdentifier].elementType === 'input' &&
+    form[inputIdentifier].elementConfig.type === 'file' &&
+    files && files.length
+  );
+};
+
+// UPDATE FORM
+// to be called on input change
+export const updateForm = (event, inputIdentifier, form, fileReader = null) => {
+
+  const isFile = fileReader && isInputFileAndHasFile(form, inputIdentifier, event.target.files);
+
+  if (isFile) {
+    fileReader.readAsDataURL(event.target.files[0]);
+  }
+
+  const errors = checkValidity(
+    event.target.value,
+    form[inputIdentifier].validation,
+    isFile ? event.target.files[0] : null
+  );
+
+  const updatedProperties = {
+    value: event.target.value,
+    valid: errors.length === 0,
+    touched: true,
+    errors: errors,
+  };
+
+  const updatedFormElement = updateObject(form[inputIdentifier], updatedProperties);
+
+  const updatedForm = updateObject(form, {
+    [inputIdentifier]: updatedFormElement
+  });
+
+  let updatedFormValidity = true;
+  for (let inputIdentifier in form) {
+    updatedFormValidity = updatedForm[inputIdentifier].valid && updatedFormValidity;
+  }
+
+  return {
+    updatedForm,
+    updatedFormValidity,
+  };
+};
