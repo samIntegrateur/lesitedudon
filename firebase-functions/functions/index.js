@@ -6,6 +6,7 @@ const spawn = require('child-process-promise').spawn;
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
+const isBase64 = require('is-base64');
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -25,6 +26,7 @@ const THUMB_MAX_WIDTH = 400;
 // Thumbnail prefix added to file names.
 const THUMB_PREFIX = 'thumb-';
 
+// Max height and width for image
 const OPTIMIZED_MAX_HEIGHT = 1000;
 const OPTIMIZED_MAX_WIDTH = 1000;
 
@@ -35,6 +37,12 @@ const runtimeOpts = {
   memory: '1GB'
 };
 
+const IMAGE_EXTENSIONS = [
+  'image/png',
+  'image/jpg',
+  'image/jpeg'
+];
+
 admin.initializeApp();
 
 // IMAGE PROCESS
@@ -42,7 +50,7 @@ admin.initializeApp();
 // Optimize image and create a thumb
 exports.imageProcess = functions.runWith(runtimeOpts).storage.object().onFinalize(async (object) => {
 
-  console.log('object', object);
+  console.log('checking object', object);
 
   // File and directory paths.
   const filePath = object.name;
@@ -163,13 +171,13 @@ exports.createPublicProfile = functions.https.onCall(async (data, context) => {
 
   if (!userProfile.empty){
     throw new functions.https.HttpsError('already-exists',
-      'This user already has a public profile.');
+      'L\'utilisateur existe déjà.');
   }
 
   const publicProfile = await admin.firestore().collection('publicProfiles').doc(data.username).get();
   if (publicProfile.exists) {
     throw new functions.https.HttpsError('already-exists',
-      'This username already belongs to an existing user.');
+      'Ce nom d\'utilisateur est déjà pris.');
   }
 
   //const user = await admin.auth().getUser(context.auth.uid);
@@ -192,12 +200,16 @@ exports.createPublicProfile = functions.https.onCall(async (data, context) => {
 exports.postOffer = functions.https.onCall(async (data, context) => {
   checkAuthentication(context);
 
+  const validKeys = {
+    title: 'string',
+    description: 'string',
+  };
 
-  // todo: add data validator with optional properties
-  // dataValidator(data, {
-  //   title: 'string',
-  //   description: 'string',
-  // });
+  if (data.image) {
+    validKeys.image = 'string';
+  }
+
+  dataValidator(data, validKeys);
 
   const user = await admin.firestore().collection('publicProfiles')
     .where('userId', '==', context.auth.uid)
@@ -206,7 +218,7 @@ exports.postOffer = functions.https.onCall(async (data, context) => {
 
   if (user.empty) {
     throw new functions.https.HttpsError('not-found',
-      'User could not be found');
+      'L\'utilisateur n\'a pas pu être trouvé.');
   }
 
   const newOffer = {
@@ -219,16 +231,27 @@ exports.postOffer = functions.https.onCall(async (data, context) => {
   const newOfferDoc = admin.firestore().collection('offers').doc();
   const newOfferId = newOfferDoc.id;
 
-  // todo, check size, type, set appropriate contentType, find a way to have a unique path (create doc first to get id ?)
   if (data.image) {
+
+    if (!isBase64(data.image, {mimeRequired: true})) {
+      throw new functions.https.HttpsError('invalid-argument',
+        'L\'image est invalide. Le format base64 est incorrect.');
+    }
+
     const mimeType = data.image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
     console.log('mimeType', mimeType);
+
+    if (!IMAGE_EXTENSIONS.includes(mimeType)) {
+      throw new functions.https.HttpsError('invalid-argument',
+        'L\'image est invalide. L\'extension n\'est pas autorisée.');
+    }
+
     const base64EncodedImageString = data.image.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = new Buffer(base64EncodedImageString, 'base64');
 
     const filename = `offers/${newOfferId}.${mimeTypes.detectExtension(mimeType)}`;
     const file = admin.storage().bucket().file(filename);
-    await file.save(imageBuffer, { contentType: 'image/jpeg' });
+    await file.save(imageBuffer, { contentType: mimeType });
     const fileUrl = await file.getSignedUrl({ action: 'read', expires: '03-09-2491' }).then(urls => urls[0]);
     newOffer.imageUrl = fileUrl;
   }
@@ -250,12 +273,12 @@ exports.postOffer = functions.https.onCall(async (data, context) => {
 function dataValidator(data, validKeys) {
   if (Object.keys(data).length !== Object.keys(validKeys).length) {
     throw new functions.https.HttpsError('invalid-argument',
-      'Data object contains invalid number of properties');
+      'Le nombre de propriétés est invalide.');
   } else {
     for (let key in data) {
       if (!validKeys[key] || typeof data[key] !== validKeys[key]) {
         throw new functions.https.HttpsError('invalid-argument',
-          'Data object contains invalid properties');
+          `La propriété "${key}" est invalide.`);
       }
     }
   }
@@ -264,9 +287,9 @@ function dataValidator(data, validKeys) {
 function checkAuthentication(context, adminRequired) {
   if(!context.auth){
     throw new functions.https.HttpsError('unauthenticated',
-      'You must be signed in to use this feature');
+      'Vous devez être authentifié pour accéder à cette fonctionnalité.');
   } else if (adminRequired && !context.auth.token.admin) {
     throw new functions.https.HttpsError('permission-denied',
-      'You must be an admin to use this feature');
+      'Vous devez être admin pour accéder à cette fonctionnalité.');
   }
 }
