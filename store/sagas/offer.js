@@ -1,7 +1,7 @@
 import * as actions from '../actions';
 import {put, call} from 'redux-saga/effects';
 import {API_BASE_URL} from '../../shared/contants';
-import {sanitizeOffers} from '../../shared/utility';
+import {sanitizeOffersFromRest} from '../../shared/sanitize';
 
 // Todo: handle response, it doesn't always mean a success
 export function* fetchOffersSaga(action) {
@@ -11,7 +11,7 @@ export function* fetchOffersSaga(action) {
     // todo: we can't sort desc, so we must take what we want (eventually with limitToLast) then sort in front
     const response = yield call(fetch, `${API_BASE_URL}offers.json?orderBy="creationDate"`);
     const responseBody = yield response.json();
-    const sanitizedData = yield sanitizeOffers(responseBody);
+    const sanitizedData = yield sanitizeOffersFromRest(responseBody);
     yield put(actions.fetchOffersSuccess(sanitizedData));
   } catch (error) {
     yield put(actions.fetchOffersFail(error));

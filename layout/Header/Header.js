@@ -48,7 +48,7 @@ const Header = () => {
               {!!user &&
                 <li className={classes.header__navListItem}>
                   <Link href="/compte">
-                    <a className={classes.header__navLink}>Mon Profil</a>
+                    <a className={classes.header__navLink}>Mon compte</a>
                   </Link>
                 </li>
               }

@@ -45,3 +45,6 @@
 .header__navListItem + .header__navListItem {
   margin-left: var(--space-sm);
 }
+
+.header__navLink {
+}

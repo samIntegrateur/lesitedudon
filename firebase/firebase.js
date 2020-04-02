@@ -1,4 +1,5 @@
 import firebaseConfig from "./config";
+import {sanitizeOffersFromFirebase} from '../shared/sanitize';
 
 class Firebase {
   constructor(app) {
@@ -44,15 +45,29 @@ class Firebase {
     return this.db.collection('offers').get();
   };
 
+  subscribeToUserOffers = ({username, snapshot}) => {
+    console.log('will try t get doc for', username);
+    const userRef = this.db.collection('publicProfiles').doc(username);
+    return this.db.collection('offers')
+      .where('author', '==', userRef)
+      .onSnapshot(snap => {
+        const sanitizedOffers = sanitizeOffersFromFirebase(snap);
+        snapshot(sanitizedOffers);
+      });
+  };
+
   postOffer = async ({title, description, image = null}) => {
     console.log('will call function');
     console.log('image', image);
-    const postOfferCallable = this.functions.httpsCallable('postOffer');
-    return postOfferCallable({
+    const datas = {
       title,
       description,
-      image,
-    })
+    };
+    if (image) {
+      datas.image = image;
+    }
+    const postOfferCallable = this.functions.httpsCallable('postOffer');
+    return postOfferCallable(datas);
   };
 }
 

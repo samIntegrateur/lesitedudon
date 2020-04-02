@@ -4,7 +4,7 @@ import OfferDetail from '../../components/Offer/OfferDetail/OfferDetail';
 import React from 'react';
 import {FIRESTORE_BASE_URL} from '../../shared/contants';
 import fetch from 'node-fetch';
-import {getOffersIds, sanitizeOffer} from '../../shared/utility';
+import {getOffersIds, sanitizeOfferFromRest} from '../../shared/sanitize';
 
 const Index = (props) => {
   const router = useRouter();
@@ -44,7 +44,7 @@ export async function getStaticProps({ params }) {
   const res = await fetch(`${FIRESTORE_BASE_URL}databases/(default)/documents/offers/${params.id}`);
   const offer = await res.json();
   console.log('offer', offer);
-  const sanitizedOffer = sanitizeOffer(offer);
+  const sanitizedOffer = sanitizeOfferFromRest(offer);
   return { props: { offer: sanitizedOffer, id: params.id } };
 }
 

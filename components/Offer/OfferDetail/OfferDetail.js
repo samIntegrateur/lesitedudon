@@ -25,7 +25,7 @@ const OfferDetail = (props) => {
         }
         <div className={classes.offer__content}>
           <div className={classes.offer__infos}>
-            <DateTime date={offer.updateTime} />
+            <DateTime date={offer.dateCreated} />
             <span>Offert par <strong>{offer.author}</strong></span>
           </div>
 

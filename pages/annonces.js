@@ -3,7 +3,7 @@ import Layout from '../layout/Layout';
 import OfferList from '../components/Offer/OfferList/OfferList';
 import fetch from 'node-fetch';
 import {FIRESTORE_BASE_URL} from '../shared/contants';
-import {sanitizeOffers} from '../shared/utility';
+import {sanitizeOffersFromRest} from '../shared/sanitize';
 
 const Annonces = (props) => {
   return (
@@ -19,7 +19,7 @@ const Annonces = (props) => {
 export async function getStaticProps(context) {
   const res = await fetch(`${FIRESTORE_BASE_URL}databases/(default)/documents/offers`);
   const offers = await res.json();
-  const sanitizedOffers = sanitizeOffers(offers);
+  const sanitizedOffers = sanitizeOffersFromRest(offers);
 
   return {
     props: {offers: sanitizedOffers},

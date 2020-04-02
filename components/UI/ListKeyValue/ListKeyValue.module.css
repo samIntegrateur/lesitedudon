@@ -1,0 +1,39 @@
+.listKeyValue,
+.listKeyValue__item {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.listKeyValue {
+  display: table;
+
+  &:not(:last-child) {
+    margin-bottom: var(--space-lg);
+  }
+}
+
+.listKeyValue__item {
+  display: table-row;
+}
+
+.listKeyValue__itemKey,
+.listKeyValue__itemValue {
+  display: table-cell;
+}
+
+.listKeyValue__itemKey {
+  padding-right: var(--space-md);
+}
+
+.listKeyValue__itemValue {
+  font-weight: var(--font-weight-bold);
+}
+
+.listKeyValue__item + .listKeyValue__item {
+
+  & .listKeyValue__itemKey,
+  & .listKeyValue__itemValue {
+    padding-top: var(--space-md);
+  }
+}

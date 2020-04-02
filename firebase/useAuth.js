@@ -17,26 +17,34 @@ function useAuth() {
 
       setLoading(true);
       unsubscribe = firebaseInstance.auth.onAuthStateChanged(userResult => {
+        setLoading(true);
+        // Here we have auth infos,
+        // Now we want to add datas from userProfile
         console.log('onAuthStateChanged');
         if (userResult) {
           console.log('userResult', userResult);
           publicProfileUnsubscribe = firebaseInstance.getUserProfile({
             userId: userResult.uid,
-            onSnapshot: r => {
-              setLoading(true);
+            onSnapshot: userSnapshot => {
+              const userDatas = [];
+              userSnapshot.forEach(doc => {
+                userDatas.push(doc.data());
+              });
+              console.log('userSnapshot', userSnapshot);
+              console.log('userDatas', userDatas);
               firebaseInstance.auth.currentUser.getIdTokenResult(true)
                 .then(token => {
                   setUser({
                     ...userResult,
                     // custom claims provided in our cloud functions
                     isAdmin: token.claims.admin,
-                    username: r.empty ? null : r.docs[0].id
+                    username: userSnapshot.empty ? null : userSnapshot.docs[0].id,
+                    userProfile: userDatas[0] || null
                   });
                   setLoading(false);
                 }).catch(e => {
                   setLoading(false);
                 });
-
             }
           })
 

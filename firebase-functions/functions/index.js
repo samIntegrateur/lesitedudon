@@ -186,9 +186,14 @@ exports.createPublicProfile = functions.https.onCall(async (data, context) => {
   //   await admin.auth().setCustomUserClaims(context.auth.uid, {admin: true});
   // }
 
+  const newDate = new Date();
+
   return new Promise((resolve, reject) => {
     admin.firestore().collection('publicProfiles').doc(data.username).set({
-      userId: context.auth.uid
+      userId: context.auth.uid,
+      dateCreated: newDate,
+      dateUpdated: newDate,
+      offersNumber: 0,
     }).then((result) => {
       return resolve(result);
     }).catch(reject)
@@ -199,6 +204,8 @@ exports.createPublicProfile = functions.https.onCall(async (data, context) => {
 // POST OFFER
 exports.postOffer = functions.https.onCall(async (data, context) => {
   checkAuthentication(context);
+
+  console.log('data', data);
 
   const validKeys = {
     title: 'string',
@@ -221,10 +228,14 @@ exports.postOffer = functions.https.onCall(async (data, context) => {
       'L\'utilisateur n\'a pas pu être trouvé.');
   }
 
+  const newDate = new Date();
+
   const newOffer = {
     author: user.docs[0].ref,
     title: data.title,
     description: data.description,
+    dateCreated: newDate,
+    dateUpdated: newDate,
   };
 
   // Create before in order to have an id for image;
@@ -233,10 +244,16 @@ exports.postOffer = functions.https.onCall(async (data, context) => {
 
   if (data.image) {
 
-    if (!isBase64(data.image, {mimeRequired: true})) {
-      throw new functions.https.HttpsError('invalid-argument',
-        'L\'image est invalide. Le format base64 est incorrect.');
-    }
+    // Is there a problem ? sometimes create an issue
+    // todo replace it ?
+    // Unhandled error RangeError: Maximum call stack size exceeded
+    //     at RegExp.test (<anonymous>)
+    //     at isBase64 (/srv/node_modules/is-base64/is-base64.js:30:50)
+
+    // if (!isBase64(data.image, {mimeRequired: true})) {
+    //   throw new functions.https.HttpsError('invalid-argument',
+    //     'L\'image est invalide. Le format base64 est incorrect.');
+    // }
 
     const mimeType = data.image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
     console.log('mimeType', mimeType);
@@ -264,6 +281,43 @@ exports.postOffer = functions.https.onCall(async (data, context) => {
   });
 
 });
+
+
+// INCREMENT USER OFFERS NUMBER
+// This is an effect of post offer
+exports.incrementUserOffers = functions.firestore.document('offers/{offerId}')
+  .onCreate(async (snap, context) => {
+    const newOffer = snap.data();
+    console.log('New offer has been created : ', newOffer);
+
+    console.log('We want to increment offersNumber for the user : ', newOffer.author.id);
+    console.log('Trying to get the user');
+
+    // Author is a reference : https://firebase.google.com/docs/reference/js/firebase.firestore.DocumentReference
+    const user = await admin.firestore().collection('publicProfiles').doc(newOffer.author.id);
+    console.log('user', user);
+
+    if (user.empty) {
+      throw new functions.https.HttpsError('not-found',
+        'L\'utilisateur n\'a pas pu être trouvé.');
+    }
+
+    const userData = await user.get().then(doc => doc.data());
+    console.log('userData', userData);
+    let previousOffersNumber = userData.offersNumber;
+    console.log('Previous OffersNumber', previousOffersNumber);
+    const newValue = previousOffersNumber + 1;
+
+    return new Promise((resolve, reject) => {
+      user.update({
+        offersNumber: newValue,
+      }).then((res) => {
+        console.log('Offers number as been incremented to ', newValue);
+        return resolve(res);
+      }).catch(reject)
+    });
+  });
+
 
 
 // -----------------------------

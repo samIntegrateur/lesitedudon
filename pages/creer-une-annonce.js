@@ -3,6 +3,7 @@ import Layout from '../layout/Layout';
 import OfferForm from '../components/Offer/OfferForm/OfferForm';
 import { useRouter } from 'next/router';
 import FirebaseContext from '../firebase/context';
+import Spinner from '../components/UI/Spinner/Spinner';
 
 // "Private" page : if not authenticated, redirect
 // todo: add server side guard : https://sergiodxa.com/articles/redirects-in-next-the-good-way/
@@ -20,6 +21,10 @@ const CreerUneAnnonce = () => {
     <Layout
       title="Créer une annonce - Le site du don"
       description="Créez une nouvelle annonce pour donner gratuitement un objet">
+
+      {loading &&
+        <Spinner />
+      }
 
       { !!user &&
         <div>
