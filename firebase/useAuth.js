@@ -20,9 +20,7 @@ function useAuth() {
         setLoading(true);
         // Here we have auth infos,
         // Now we want to add datas from userProfile
-        console.log('onAuthStateChanged');
         if (userResult) {
-          console.log('userResult', userResult);
           publicProfileUnsubscribe = firebaseInstance.getUserProfile({
             userId: userResult.uid,
             onSnapshot: userSnapshot => {
@@ -30,8 +28,6 @@ function useAuth() {
               userSnapshot.forEach(doc => {
                 userDatas.push(doc.data());
               });
-              console.log('userSnapshot', userSnapshot);
-              console.log('userDatas', userDatas);
               firebaseInstance.auth.currentUser.getIdTokenResult(true)
                 .then(token => {
                   setUser({

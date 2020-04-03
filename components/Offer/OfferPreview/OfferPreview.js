@@ -5,7 +5,6 @@ import DateTime from '../../UI/DateTime/DateTime';
 const OfferPreview = ({offer}) => {
 
   const imageSrc = offer.thumbUrl || offer.imageUrl || null;
-  console.log('offer', offer);
 
   return (
     <article className={classes.offerPreview}>

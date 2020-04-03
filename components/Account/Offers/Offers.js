@@ -9,16 +9,12 @@ const Offers = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log('effect');
     let unsubscribe;
     if (user && user.username && firebase) {
       setIsLoading(true);
-      console.log('user', user);
-      console.log('user.username', user.username);
       unsubscribe = firebase.subscribeToUserOffers({
         username: user.username,
         snapshot: (offersSnapshot) => {
-          console.log('offersSnapshot', offersSnapshot);
           setIsLoading(false);
           setOffers(offersSnapshot);
         }

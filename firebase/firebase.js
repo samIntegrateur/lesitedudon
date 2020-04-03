@@ -41,12 +41,37 @@ class Firebase {
       .onSnapshot(onSnapshot);
   };
 
-  getOffers = async ({}) => {
-    return this.db.collection('offers').get();
+  getOffers = async ({limit = 10, orderBy = {value: 'dateCreated', dir: 'desc'}, startAfter = null}) => {
+    let query;
+    console.log('startAfter', startAfter);
+
+    if (startAfter) {
+      query = this.db.collection('offers')
+        .orderBy(orderBy.value, orderBy.dir)
+        .startAfter(startAfter)
+        .limit(limit);
+    } else {
+      query = this.db.collection('offers')
+        .orderBy(orderBy.value, orderBy.dir)
+        .limit(limit);
+    }
+
+    return await query.get()
+      .then(snapshot => {
+        let newOffers;
+        let lastItem;
+
+        if (!snapshot.empty) {
+          newOffers = sanitizeOffersFromFirebase(snapshot);
+          // We store the last Item returned as the starting doc for next "page"
+          // https://firebase.google.com/docs/firestore/query-data/query-cursors
+          lastItem = snapshot.docs[snapshot.docs.length-1];
+        }
+        return {newOffers, lastItem};
+      });
   };
 
   subscribeToUserOffers = ({username, snapshot}) => {
-    console.log('will try t get doc for', username);
     const userRef = this.db.collection('publicProfiles').doc(username);
     return this.db.collection('offers')
       .where('author', '==', userRef)
@@ -57,8 +82,6 @@ class Firebase {
   };
 
   postOffer = async ({title, description, image = null}) => {
-    console.log('will call function');
-    console.log('image', image);
     const datas = {
       title,
       description,

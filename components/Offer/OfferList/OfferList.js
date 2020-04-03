@@ -9,7 +9,7 @@ const OfferList = (props) => {
   let offersDisplay = null;
 
   if (props.offers) {
-    if (props.offers.length > 0) {
+    if (props.offers.length && props.offers.length > 0) {
       offersDisplay = (
         <ul className={classes.offerList}>
           {props.offers.map(offer => (

@@ -46,10 +46,12 @@ export const getOffersIds = (data) => {
 // For firebase.js functions
 export const sanitizeOffersFromFirebase = (snapshot) => {
   const offers = [];
+  if (snapshot.empty) {
+    return offers;
+  }
+
   snapshot.forEach(doc => {
-    console.log('doc', doc);
     const itemData = doc.data();
-    console.log('itemData', itemData);
     offers.push({
       ...itemData,
       id: doc.id,
