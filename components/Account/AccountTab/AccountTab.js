@@ -11,19 +11,25 @@ const dynamicOptions = {
 
 const Profile = dynamic(() => import('../Profile/Profile'), dynamicOptions);
 const Offers = dynamic(() => import('../Offers/Offers'), dynamicOptions);
+const Conversations = dynamic(() => import('../Conversations/Conversations'), dynamicOptions);
 
 const AccountTab = ({router}) => {
 
   const tabs = [
     {
       title: 'Mon Profil',
-      query: 'Profile',
+      query: 'Profil',
       component: Profile,
     },
     {
       title: 'Mes annonces',
-      query: 'Offers',
+      query: 'Annonces',
       component: Offers,
+    },
+    {
+      title: 'Mes conversations',
+      query: 'Conversations',
+      component: Conversations,
     }
   ];
 
@@ -34,7 +40,6 @@ const AccountTab = ({router}) => {
   useEffect(() => {
     const tab = router.query.tab;
     const activeTab = getTab(tab);
-    console.log('activeTab', activeTab);
     if (activeTab) {
       setTabActive(activeTab.key);
       setActiveComponent(activeTab.component);
@@ -52,9 +57,7 @@ const AccountTab = ({router}) => {
   const getTab = (tab) => {
     if (tab) {
       const activeTab = tabs.find(t => t.query === tab);
-      console.log('activeTab', activeTab);
       const activeTabKey = tabs.findIndex(t => t.query === tab);
-      console.log('activeTabKey', activeTabKey);
       if (activeTab) {
         return {
           component: activeTab.component,

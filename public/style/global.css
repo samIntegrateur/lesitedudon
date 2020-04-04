@@ -121,12 +121,6 @@ a {
   cursor: pointer;
   text-decoration: underline;
 }
-
-div {
-  & p {
-  }
-}
-
 a:hover,
 a:focus {
   color: var(--link-color-hover);
@@ -196,5 +190,22 @@ img {
 
   &:not(:last-child) {
     margin-bottom: var(--space-xl);
+  }
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
   }
 }

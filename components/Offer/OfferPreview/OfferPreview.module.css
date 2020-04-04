@@ -1,7 +1,7 @@
 .offerPreview {
-    display: flex;
-    width: 100%;
-    color: var(--main-text-color);
+  display: flex;
+  width: 100%;
+  color: var(--main-text-color);
 }
 
 .offerPreview_media {
@@ -9,26 +9,37 @@
 }
 
 .offerPreview_img {
-    width: 18.75rem;
-    height: 12.5rem;
-    object-fit: cover;
+  width: 18.75rem;
+  height: 12.5rem;
+  object-fit: cover;
 }
 
 .offerPreview_content {
-    flex-grow: 1;
-    padding: var(--space-md);
+  flex-grow: 1;
+  padding: var(--space-md);
 }
 
 .offerPreview_title {
-    transition: color ease-out .2s;
+  transition: color ease-out 0.2s;
 }
 
 a:hover .offerPreview_title,
 a:focus .offerPreview_title {
-    color: var(--link-color);
+  color: var(--link-color);
 }
 
 .offerPreview_date {
-    color: var(--mute-text-color);
+  color: var(--mute-text-color);
 }
 
+.offerPreviewSmall {
+
+  & .offerPreview_img {
+    width: 12rem;
+    height: 100%;
+  }
+
+  & .offerPreview_title {
+    font-size: 1.2rem;
+  }
+}
