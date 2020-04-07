@@ -76,4 +76,8 @@
 
 .offer__desc {
   font-size: 1.2rem;
+
+  &:not(:last-child) {
+    margin-bottom: var(--space-lg);
+  }
 }

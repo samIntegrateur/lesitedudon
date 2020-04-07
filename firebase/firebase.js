@@ -4,11 +4,11 @@ import {sanitizeOffersFromFirebase} from '../shared/sanitize';
 class Firebase {
   constructor(app) {
     if(!firebaseInstance) {
-      app.initializeApp(firebaseConfig);
+      const fireApp = app.initializeApp(firebaseConfig);
 
       this.auth = app.auth();
       this.db = app.firestore();
-      this.functions = app.functions();
+      this.functions = fireApp.functions('europe-west1');
       this.storage = app.storage();
     }
   }
@@ -34,6 +34,7 @@ class Firebase {
     await this.auth.signOut();
   };
 
+  // todo: put this in cloud fn to ensure userId fits the auth user
   getUserProfile = ({userId, onSnapshot}) => {
     return this.db.collection('publicProfiles')
       .where('userId', '==', userId)
@@ -92,6 +93,22 @@ class Firebase {
     const postOfferCallable = this.functions.httpsCallable('postOffer');
     return postOfferCallable(datas);
   };
+
+  checkConversation = async (args) => {
+    const checkConversationCallable = this.functions.httpsCallable('checkConversation');
+    return checkConversationCallable(args);
+  };
+
+  getConversation = async ({conversationId}) => {
+    const getConversationCallable = this.functions.httpsCallable('getConversation');
+    return getConversationCallable({conversationId});
+  };
+
+  postConversation = async (args) => {
+    const postConversationCallable = this.functions.httpsCallable('postConversation');
+    return postConversationCallable(args);
+  };
+
 }
 
 let firebaseInstance;

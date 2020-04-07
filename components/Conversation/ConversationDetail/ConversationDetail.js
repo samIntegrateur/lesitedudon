@@ -1,9 +1,12 @@
 import React from 'react';
 
-const ConversationDetail = () => {
+const ConversationDetail = ({conversation}) => {
+  console.log('conversation', conversation);
   return (
     <div>
-      
+      <p>{conversation.askerUser}</p>
+      <p>{conversation.receiverUser}</p>
+      <p>{conversation.offer}</p>
     </div>
   );
 };

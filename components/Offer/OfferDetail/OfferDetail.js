@@ -1,11 +1,16 @@
 import React from 'react';
 import classes from './OfferDetail.module.css';
 import DateTime from '../../UI/DateTime/DateTime';
+import Button from '../../UI/Button/Button';
+import Spinner from '../../UI/Spinner/Spinner';
 
 const OfferDetail = (props) => {
 
   let offerDisplay = null;
-  const {offer} = props;
+
+  const {
+    offer, conversationAvailable, conversationAvailabilityLoading, sendMessageClicked
+  } = props;
 
   if (offer) {
     offerDisplay = (
@@ -32,6 +37,17 @@ const OfferDetail = (props) => {
           <div className={classes.offer__desc}>
             {offer.description}
           </div>
+
+          {conversationAvailabilityLoading &&
+            <Spinner small />
+          }
+
+          {!conversationAvailabilityLoading && conversationAvailable &&
+            <Button type="button" style="secondary" clicked={sendMessageClicked}>
+              Envoyer un message
+            </Button>
+          }
+
         </div>
       </article>
     );

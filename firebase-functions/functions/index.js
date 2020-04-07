@@ -37,6 +37,10 @@ const runtimeOpts = {
   memory: '1GB'
 };
 
+const region = 'europe-west1';
+
+const enhancedFunctions = functions.region(region).runWith(runtimeOpts);
+
 const IMAGE_EXTENSIONS = [
   'image/png',
   'image/jpg',
@@ -45,10 +49,11 @@ const IMAGE_EXTENSIONS = [
 
 admin.initializeApp();
 
+
 // IMAGE PROCESS
 // src https://github.com/firebase/functions-samples/blob/master/generate-thumbnail/functions/index.js
 // Optimize image and create a thumb
-exports.imageProcess = functions.runWith(runtimeOpts).storage.object().onFinalize(async (object) => {
+exports.imageProcess = enhancedFunctions.storage.object().onFinalize(async (object) => {
 
   console.log('checking object', object);
 
@@ -160,7 +165,7 @@ exports.imageProcess = functions.runWith(runtimeOpts).storage.object().onFinaliz
 // CREATE PUBLIC PROFILE
 
 // At this point, a user has already been created in front, now we create an entry for it in publicProfiles collection
-exports.createPublicProfile = functions.https.onCall(async (data, context) => {
+exports.createPublicProfile = enhancedFunctions.https.onCall(async (data, context) => {
   checkAuthentication(context);
   dataValidator(data, {
     username: 'string'
@@ -202,7 +207,7 @@ exports.createPublicProfile = functions.https.onCall(async (data, context) => {
 });
 
 // POST OFFER
-exports.postOffer = functions.https.onCall(async (data, context) => {
+exports.postOffer = enhancedFunctions.https.onCall(async (data, context) => {
   checkAuthentication(context);
 
   console.log('data', data);
@@ -282,10 +287,189 @@ exports.postOffer = functions.https.onCall(async (data, context) => {
 
 });
 
+// CHECK CONVERSATION
+// Return false if it doesn't exists, a conversation id if it does
+exports.checkConversation = enhancedFunctions.https.onCall(async (data, context) => {
+  checkAuthentication(context);
+  const validKeys = {
+    offerId: 'string',
+    askerUserId: 'string',
+    receiverUserId: 'string',
+  };
+  dataValidator(data, validKeys);
+
+  if (data.askerUserId === data.receiverUserId) {
+    throw new functions.https.HttpsError('invalid-argument',
+      'Vous ne pouvez pas avoir une conversation avec vous-même.');
+  }
+
+  const conversation = await admin.firestore().collection('conversations')
+    .where('offer', '==', data.offerId)
+    .where('askerUser', '==', data.askerUserId)
+    .where('receiverUser', '==', data.receiverUserId)
+    .limit(1)
+    .get();
+
+  return new Promise((resolve, reject) => {
+    let response;
+
+    if (conversation.empty) {
+      response = false;
+    } else {
+      response = conversation.docs[0].id;
+    }
+
+    return resolve(response);
+  });
+});
+
+// GET CONVERSATION
+// Return a conversation
+// We don't make it in front as we need to ensure the user is one of the usernames
+exports.getConversation = enhancedFunctions.https.onCall(async (data, context) => {
+  checkAuthentication(context);
+  const validKeys = {
+    conversationId: 'string',
+  };
+
+  dataValidator(data, validKeys);
+
+  const userProfile = await admin.firestore().collection('publicProfiles')
+    .where('userId', '==', context.auth.uid).limit(1).get();
+
+  if (userProfile.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'utilisateur n\'a pas pu être trouvé.');
+  }
+
+  const username = userProfile.docs[0].id;
+  console.log('username is ', username);
+
+  const conversation = await admin.firestore().collection('conversations').doc(data.conversationId).get();
+
+  if (conversation.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'La conversation n\'a pas pu être trouvée.');
+  }
+
+  const conversationData = conversation.data();
+  console.log('conversationData ', conversationData);
+
+  if (conversationData.askerUser !== username && conversationData.receiverUser !== username) {
+    throw new functions.https.HttpsError('permission-denied',
+      'Vous n\'avez pas accès à cette conversation.');
+  }
+
+  return new Promise((resolve, reject) => {
+    return resolve(conversationData);
+  });
+});
+
+// POST CONVERSATION
+// Create a new conversation between 2 users concerning an offer from one of them
+// askerUser is the user interested by the offer and want to contact the author
+// receiverUser is the offer author
+exports.postConversation = enhancedFunctions.https.onCall(async (data, context) => {
+
+  checkAuthentication(context);
+  const validKeys = {
+    offerId: 'string',
+    askerUserId: 'string',
+    receiverUserId: 'string',
+  };
+  dataValidator(data, validKeys);
+
+  if (data.askerUserId === data.receiverUserId) {
+    throw new functions.https.HttpsError('invalid-argument',
+      'Vous ne pouvez pas créer une conversation avec vous-même.');
+  }
+
+  const userProfile = await admin.firestore().collection('publicProfiles')
+    .where('userId', '==', context.auth.uid).limit(1).get();
+
+  if (userProfile.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'utilisateur n\'a pas pu être trouvé.');
+  }
+
+  console.log('userProfile is ', userProfile.docs[0]);
+
+  // Important for security, the asker must be the logged user
+  if (userProfile.docs[0].id !== data.askerUserId) {
+    throw new functions.https.HttpsError('invalid-argument',
+      'Vous ne pouvez pas créer une conversation pour un autre utilisateur.');
+  }
+
+  if (data.askerUserId === data.receiverUserId) {
+    throw new functions.https.HttpsError('invalid-argument',
+      'Vous ne pouvez pas créer une conversation avec vous-même.');
+  }
+
+  const askerUser = await admin.firestore().collection('publicProfiles').doc(data.askerUserId).get();
+
+  if (askerUser.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'utilisateur '+ data.askerUserId + 'n\'a pas pu être trouvé.');
+  }
+
+  console.log('askerUser is ', askerUser);
+
+  const receiverUser = await admin.firestore().collection('publicProfiles').doc(data.receiverUserId).get();
+
+  if (receiverUser.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'utilisateur '+ data.receiverUserId + 'n\'a pas pu être trouvé.');
+  }
+
+  console.log('receiverUser is ', receiverUser);
+
+  const offer = await admin.firestore().collection('offers').doc(data.offerId).get();
+
+  if (offer.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'offre concernée n\'a pas pu être trouvée.');
+  }
+
+  console.log('offer is ', offer);
+
+  const conversation = await admin.firestore().collection('conversations')
+    .where('offer', '==', offer.id)
+    .where('askerUser', '==', askerUser.id)
+    .where('receiverUser', '==', receiverUser.id)
+    .limit(1)
+    .get();
+
+  console.log('check if conversation exists', conversation);
+
+  if (!conversation.empty) {
+    throw new functions.https.HttpsError('already-exists',
+      'La conversation existe déjà.');
+  }
+
+  return new Promise((resolve, reject) => {
+
+    const newConversationDoc = admin.firestore().collection('conversations').doc();
+    const newConversationDocId = newConversationDoc.id;
+    const newDate = new Date();
+
+    newConversationDoc.set({
+      askerUser: askerUser.id,
+      receiverUser: receiverUser.id,
+      offer: offer.id,
+      dateCreated: newDate,
+      dateUpdated: newDate,
+      messages: [],
+    }).then((result) => {
+      console.log('New conversation ', result);
+      return resolve(newConversationDocId);
+    }).catch(reject)
+  });
+
+});
 
 // INCREMENT USER OFFERS NUMBER
 // This is an effect of post offer
-exports.incrementUserOffers = functions.firestore.document('offers/{offerId}')
+exports.incrementUserOffers = enhancedFunctions.firestore.document('offers/{offerId}')
   .onCreate(async (snap, context) => {
     const newOffer = snap.data();
     console.log('New offer has been created : ', newOffer);
@@ -297,7 +481,8 @@ exports.incrementUserOffers = functions.firestore.document('offers/{offerId}')
     const user = await admin.firestore().collection('publicProfiles').doc(newOffer.author.id);
     console.log('user', user);
 
-    if (user.empty) {
+    const userGet = await user.get();
+    if (userGet.empty) {
       throw new functions.https.HttpsError('not-found',
         'L\'utilisateur n\'a pas pu être trouvé.');
     }

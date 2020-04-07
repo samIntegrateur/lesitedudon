@@ -2,6 +2,7 @@ import { takeEvery, all } from 'redux-saga/effects';
 import * as actionTypes from '../actions/actionTypes';
 import {fetchOffersSaga, postOfferSaga, fetchOfferSaga} from './offer';
 import {authCheckStateSaga, authUserSaga, checkAuthTimeoutSaga, logoutSaga} from './auth';
+import {postConversationSaga, getConversationSaga, checkConversationSaga} from './conversation';
 
 export function* watchAuth() {
   yield takeEvery(actionTypes.AUTH_INITIATE_LOGOUT, logoutSaga);
@@ -14,4 +15,10 @@ export function* watchOffer() {
   yield takeEvery(actionTypes.FETCH_OFFERS, fetchOffersSaga);
   yield takeEvery(actionTypes.FETCH_OFFER, fetchOfferSaga);
   yield takeEvery(actionTypes.POST_OFFER, postOfferSaga);
+}
+
+export function* watchConversation() {
+  yield takeEvery(actionTypes.POST_CONVERSATION, postConversationSaga);
+  yield takeEvery(actionTypes.GET_CONVERSATION, getConversationSaga);
+  yield takeEvery(actionTypes.CHECK_CONVERSATION, checkConversationSaga);
 }

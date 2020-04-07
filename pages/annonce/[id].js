@@ -1,10 +1,10 @@
 import { useRouter } from 'next/router'
 import Layout from '../../layout/Layout';
-import OfferDetail from '../../components/Offer/OfferDetail/OfferDetail';
 import React from 'react';
 import {FIRESTORE_BASE_URL} from '../../shared/contants';
 import fetch from 'node-fetch';
 import {getOffersIds, sanitizeOfferFromRest} from '../../shared/sanitize';
+import OfferConversationHandler from '../../components/Offer/OfferConversationHandler/OfferConversationHandler';
 
 const Index = (props) => {
   const router = useRouter();
@@ -16,7 +16,7 @@ const Index = (props) => {
       title={dynamicTitle}
       description={dynamicTitle}>
 
-      <OfferDetail id={props.id} offer={props.offer} />
+      <OfferConversationHandler offerId={props.id} offer={props.offer} />
 
       <a onClick={router.back}>Retour</a>
     </Layout>

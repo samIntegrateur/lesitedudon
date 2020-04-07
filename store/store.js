@@ -1,10 +1,11 @@
 import createSagaMiddleware from 'redux-saga';
 import {applyMiddleware, combineReducers, createStore} from 'redux';
-import {watchOffer, watchAuth} from './sagas';
+import {watchOffer, watchAuth, watchConversation} from './sagas';
 import offerReducer from './reducers/offer';
 import thunk from 'redux-thunk';
 import {composeWithDevTools} from 'redux-devtools-extension/developmentOnly';
 import authReducer from './reducers/auth';
+import conversationReducer from './reducers/conversation';
 
 // todo : cleanup
 // a lot of actions aren't used anymore since with use firebase client (with context) instead of rest api
@@ -19,6 +20,7 @@ export const makeStore = (initialState, options) => {
   const rootReducer = combineReducers({
     auth: authReducer,
     offer: offerReducer,
+    conversation: conversationReducer,
   });
 
   // const composeEnhancers = process.env.NODE_ENV === 'development' ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ : null || compose;
@@ -35,6 +37,7 @@ export const makeStore = (initialState, options) => {
   // 3: Run your sagas:
   sagaMiddleware.run(watchAuth);
   sagaMiddleware.run(watchOffer);
+  sagaMiddleware.run(watchConversation);
 
   // 4: now return the store:
   return store
