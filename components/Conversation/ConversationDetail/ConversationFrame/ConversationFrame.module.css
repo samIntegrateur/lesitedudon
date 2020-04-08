@@ -1,0 +1,79 @@
+.conversation {
+  padding: var(--space-md);
+  background-color: #f2f2f2;
+}
+
+.conversation_messageList,
+.conversation_messageListItem {
+  display: block;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.conversation_messageList {
+  display: flex;
+  flex-direction: column;
+}
+
+.conversation_messageListItem {
+  &:not(:last-child) {
+    margin-bottom: var(--space-sm);
+  }
+}
+
+.conversation_message {
+  max-width: 90%;
+}
+
+.conversation_messageInfos {
+  display: flex;
+  margin-top: var(--space-xs);
+  font-size: 0.9rem;
+}
+
+.conversation_messageUser {
+  font-size: inherit;
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 0;
+}
+
+.conversation_messageTime {
+  &::before {
+    padding: 0 0.3em;
+    content: '-';
+  }
+}
+
+.conversation_messageTextWrapper {
+  margin: 0;
+  border: none;
+  display: inline-block;
+  padding: var(--space-sm);
+  border-radius: 1rem;
+}
+
+.conversation_messageText {
+}
+
+.isMe {
+  align-self: flex-end;
+
+  & .conversation_messageTextWrapper {
+    background-color: #9acbff;
+    border-bottom-right-radius: 0;
+  }
+
+  & .conversation_messageInfos {
+    justify-content: flex-end;
+  }
+}
+
+.isYou {
+  align-self: flex-start;
+
+  & .conversation_messageTextWrapper {
+    background-color: #f2afd4;
+    border-top-left-radius: 0;
+  }
+}

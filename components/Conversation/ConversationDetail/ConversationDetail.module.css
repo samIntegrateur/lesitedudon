@@ -1,0 +1,30 @@
+.conversationDetail {
+  display: flex;
+}
+
+.conversationDetail__conversation {
+  flex-grow: 1;
+  padding-right: var(--space-lg);
+}
+
+.conversationDetail__offer {
+  flex-basis: 40%;
+}
+
+.conversationDetail__offerLink {
+  display: flex;
+  border: 1px solid var(--border-color);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color ease-out 0.2s;
+
+  &:hover,
+  &:focus {
+    border-color: var(--link-color);
+    color: inherit;
+
+    & .conversationPreview__user {
+      color: var(--link-color);
+    }
+  }
+}

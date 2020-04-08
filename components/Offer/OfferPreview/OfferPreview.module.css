@@ -33,6 +33,7 @@ a:focus .offerPreview_title {
 }
 
 .offerPreviewSmall {
+  min-height: 8.75rem;
 
   & .offerPreview_img {
     width: 12rem;

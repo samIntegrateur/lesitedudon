@@ -36,13 +36,13 @@ const Index = (props) => {
     display = <Spinner />;
   } else if (getConvError) {
     display = (
-      <div className="part">
+      <>
         <p>Une erreur s'est produite, la conversation n'a pas pu être récupérée.</p>
         {getConvError.message ? <p className="error">{getConvError.message}</p> : null}
-      </div>
+      </>
     )
   } else if (conversation) {
-    display = <ConversationDetail conversation={conversation} />
+    display = <ConversationDetail conversation={conversation} user={user} />
   }
 
   return (
@@ -50,7 +50,9 @@ const Index = (props) => {
       title={dynamicTitle}
       description={dynamicTitle}>
 
-      {display}
+      <div className="part-big">
+        {display}
+      </div>
 
       <a onClick={router.back}>Retour</a>
     </Layout>

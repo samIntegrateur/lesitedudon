@@ -51,16 +51,20 @@ export const sanitizeOffersFromFirebase = (snapshot) => {
   }
 
   snapshot.forEach(doc => {
-    const itemData = doc.data();
-    offers.push({
-      ...itemData,
-      id: doc.id,
-      // Here we receive the whole author reference, but we just want the id
-      author: itemData.author.id,
-      // Convert date timestamp
-      dateCreated: fromUnixTime(itemData.dateCreated.seconds),
-      dateUpdated: fromUnixTime(itemData.dateUpdated.seconds),
-    });
+    offers.push(sanitizeOfferFromFirebase(doc));
   });
   return offers;
+};
+
+export const sanitizeOfferFromFirebase = (offer) => {
+  const itemData = offer.data();
+  return {
+    ...itemData,
+    id: offer.id,
+    // Here we receive the whole author reference, but we just want the id
+    author: itemData.author.id,
+    // Convert date timestamp
+    dateCreated: fromUnixTime(itemData.dateCreated.seconds),
+    dateUpdated: fromUnixTime(itemData.dateUpdated.seconds),
+  }
 };

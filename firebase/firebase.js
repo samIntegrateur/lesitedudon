@@ -1,5 +1,5 @@
 import firebaseConfig from "./config";
-import {sanitizeOffersFromFirebase} from '../shared/sanitize';
+import {sanitizeOfferFromFirebase, sanitizeOffersFromFirebase} from '../shared/sanitize';
 
 class Firebase {
   constructor(app) {
@@ -82,6 +82,19 @@ class Firebase {
       });
   };
 
+  getOffer = async ({offerId}) => {
+    const query = this.db.collection('offers').doc(offerId);
+    return await query.get()
+      .then(snapshot => {
+        let offer;
+
+        if (!snapshot.empty) {
+          offer = sanitizeOfferFromFirebase(snapshot);
+        }
+        return offer;
+      });
+  };
+
   postOffer = async ({title, description, image = null}) => {
     const datas = {
       title,
@@ -99,9 +112,38 @@ class Firebase {
     return checkConversationCallable(args);
   };
 
-  getConversation = async ({conversationId}) => {
+  // withOffer false: we just return the id, true, we get the full offer
+  getConversation = async ({conversationId, withOffer = true}) => {
     const getConversationCallable = this.functions.httpsCallable('getConversation');
-    return getConversationCallable({conversationId});
+    const conversationResult = await getConversationCallable({conversationId});
+
+    console.log('result', conversationResult);
+
+    return new Promise(async (resolve, reject) => {
+      if (conversationResult.error) {
+        return reject(conversationResult);
+      }
+
+      if (!withOffer) {
+        return resolve(conversationResult);
+      }
+
+      const offerResult = await this.getOffer({offerId: conversationResult.data.offer});
+      console.log('offerResult', offerResult);
+      if (offerResult.error) {
+        console.warn(`Offer with id ${conversationResult.data.offer} for conversation ${conversationId} couldn't be found.`);
+        return resolve(conversationResult);
+      }
+      const conversationWithOffer = {
+        data: {
+          ...conversationResult.data,
+          offer: offerResult,
+        }
+      };
+
+      console.log('conversationWithOffer', conversationWithOffer);
+      return resolve(conversationWithOffer);
+    });
   };
 
   postConversation = async (args) => {
