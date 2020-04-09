@@ -3,10 +3,11 @@ import classes from './ConversationDetail.module.css';
 import OfferPreview from '../../Offer/OfferPreview/OfferPreview';
 import Link from 'next/link';
 import ConversationFrame from './ConversationFrame/ConversationFrame';
+import ConversationForm from './ConversationForm/ConversationForm';
 
-const ConversationDetail = ({conversation, user}) => {
+const ConversationDetail = ({conversation, offer, offerError, user}) => {
 
-  const {askerUser, receiverUser, offer} = conversation;
+  const {askerUser, receiverUser} = conversation;
 
   const [me, setMe] = useState(null);
   const [otherUser, setOtherUser] = useState(null);
@@ -14,7 +15,6 @@ const ConversationDetail = ({conversation, user}) => {
 
   useEffect(() => {
     if (user && user.username) {
-      console.log('user.username', user.username);
       if (user.username === askerUser) {
         setMe(askerUser);
         setOtherUser(receiverUser);
@@ -29,6 +29,27 @@ const ConversationDetail = ({conversation, user}) => {
 
 
   let offerTitle = null;
+  let offerDisplay = null;
+
+  if (offerError) {
+    offerDisplay = (
+      <>
+        <p>Une erreur s'est produite, l'offre n'a pas pu être récupérée.</p>
+        {offerError.message ? <p className="error">{offerError.message}</p> : null}
+      </>
+    );
+  } else if (offer) {
+    offerDisplay = (
+      <>
+        {offerTitle}
+        <Link href={`/annonce/[id]`} as={`/annonce/${conversation.offer.id}`}>
+          <a title="Voir l'annonce" className={classes.conversationDetail__offerLink}>
+            <OfferPreview offer={offer} small />
+          </a>
+        </Link>
+      </>
+    );
+  }
 
   if (isMyOffer !== null) {
       offerTitle = isMyOffer
@@ -73,14 +94,10 @@ const ConversationDetail = ({conversation, user}) => {
       <div className={classes.conversationDetail}>
         <section className={classes.conversationDetail__conversation}>
           <ConversationFrame messages={messages} me={me} />
+          <ConversationForm />
         </section>
         <section className={classes.conversationDetail__offer}>
-          {offerTitle}
-          <Link href={`/annonce/[id]`} as={`/annonce/${conversation.offer.id}`}>
-            <a title="Voir l'annonce" className={classes.conversationDetail__offerLink}>
-              <OfferPreview offer={offer} small />
-            </a>
-          </Link>
+          {offerDisplay}
         </section>
 
       </div>

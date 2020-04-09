@@ -82,6 +82,22 @@ class Firebase {
       });
   };
 
+  // todo: make database rules to ensure user is involved
+  subscribeToConversation = ({conversationId, handleSnapshot, handleError}) => {
+    let query = this.db.collection('conversations').doc(conversationId);
+    return query
+      .onSnapshot(snap => {
+        if (!snap.exists) {
+          handleError({message: 'La conversation est introuvable.'});
+        } else {
+          const conversation = snap.data();
+          handleSnapshot(conversation);
+        }
+      }, (error) => {
+        handleError(error);
+      })
+  };
+
   getOffer = async ({offerId}) => {
     const query = this.db.collection('offers').doc(offerId);
     return await query.get()
@@ -117,8 +133,6 @@ class Firebase {
     const getConversationCallable = this.functions.httpsCallable('getConversation');
     const conversationResult = await getConversationCallable({conversationId});
 
-    console.log('result', conversationResult);
-
     return new Promise(async (resolve, reject) => {
       if (conversationResult.error) {
         return reject(conversationResult);
@@ -129,7 +143,6 @@ class Firebase {
       }
 
       const offerResult = await this.getOffer({offerId: conversationResult.data.offer});
-      console.log('offerResult', offerResult);
       if (offerResult.error) {
         console.warn(`Offer with id ${conversationResult.data.offer} for conversation ${conversationId} couldn't be found.`);
         return resolve(conversationResult);
@@ -141,7 +154,6 @@ class Firebase {
         }
       };
 
-      console.log('conversationWithOffer', conversationWithOffer);
       return resolve(conversationWithOffer);
     });
   };
@@ -156,8 +168,6 @@ class Firebase {
 let firebaseInstance;
 
 function getFirebaseInstance(app) {
-  console.log('firebaseInstance', firebaseInstance);
-  console.log('app', app);
   if (!firebaseInstance && app) {
     firebaseInstance = new Firebase(app);
     return firebaseInstance;

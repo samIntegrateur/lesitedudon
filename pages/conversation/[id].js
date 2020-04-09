@@ -4,14 +4,18 @@ import Layout from '../../layout/Layout';
 import ConversationDetail from '../../components/Conversation/ConversationDetail/ConversationDetail';
 import FirebaseContext from '../../firebase/context';
 import Spinner from '../../components/UI/Spinner/Spinner';
-import * as actions from '../../store/actions';
-import {connect} from 'react-redux';
 
 // do ssr ?
 const Index = (props) => {
   const router = useRouter();
   const {loading, user, firebase} = useContext(FirebaseContext);
-  const {conversation, getConvLoading, getConvError, onGetConversation} = props;
+  const [conversation, setConversation] = useState(null);
+  const [convError, setConvError] = useState(null);
+  const [convLoading, setConvLoading] = useState(true);
+  const [offerId, setOfferId] = useState(null);
+  const [offer, setOffer] = useState(false);
+  const [offerLoading, setOfferLoading] = useState(true);
+  const [offerError, setOfferError] = useState(false);
 
   const { id } = router.query;
 
@@ -22,27 +26,70 @@ const Index = (props) => {
   }, [user, loading]);
 
   useEffect(() => {
-    if (id && user && firebase) {
-      console.log('onGetConversation');
-      onGetConversation(id, firebase);
+    let unsubscribe;
+    if (user && user.username && firebase && id) {
+      setConvLoading(true);
+      unsubscribe = firebase.subscribeToConversation({
+        conversationId: id,
+        handleSnapshot: (conversationSnapshot) => {
+          console.log('conversationSnapshot', conversationSnapshot);
+          setConvLoading(false);
+          handleConversationSnapshot(conversationSnapshot);
+        },
+        handleError: (error) => {
+          setConvLoading(false);
+          setConvError(error);
+        }
+      })
     }
-  }, [id, user, firebase]);
+
+    return () => {
+      if(unsubscribe) {
+        unsubscribe();
+      }
+    }
+  }, [user, firebase, id]);
+
+  const handleConversationSnapshot = (conversationSnapshot) => {
+    setConversation(conversationSnapshot);
+    const id = conversationSnapshot.offer;
+    if (id !== offerId) {
+      setOfferId(id);
+      getOffer(id);
+    }
+  };
+
+  const getOffer = (id) => {
+    setOfferLoading(true);
+    firebase.getOffer({offerId: id})
+      .then(offer => {
+        setOfferLoading(false);
+        setOffer(offer);
+      })
+      .catch(error => {
+        setOfferLoading(false);
+        setOfferError(error);
+      });
+  };
 
   const dynamicTitle = `Conversation ${id} - Le site du don`;
 
   let display = null;
 
-  if (loading || getConvLoading) {
+  if (loading || convLoading || offerLoading) {
     display = <Spinner />;
-  } else if (getConvError) {
+  } else if (convError) {
     display = (
       <>
         <p>Une erreur s'est produite, la conversation n'a pas pu être récupérée.</p>
-        {getConvError.message ? <p className="error">{getConvError.message}</p> : null}
+        {convError.message ? <p className="error">{convError.message}</p> : null}
       </>
     )
   } else if (conversation) {
-    display = <ConversationDetail conversation={conversation} user={user} />
+    display = <ConversationDetail conversation={conversation}
+                                  offer={offer}
+                                  offerError={offerError}
+                                  user={user} />
   }
 
   return (
@@ -59,18 +106,4 @@ const Index = (props) => {
   );
 };
 
-const mapStateToProps = state => {
-  return {
-    conversation: state.conversation.conversation,
-    getConvLoading: state.conversation.apiState.getConversation.loading,
-    getConvError: state.conversation.apiState.getConversation.error,
-  }
-};
-
-const mapDispatchToProps = dispatch => {
-  return {
-    onGetConversation: (conversationId, firebase) => dispatch(actions.getConversation(conversationId, firebase)),
-  }
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Index);
+export default Index;

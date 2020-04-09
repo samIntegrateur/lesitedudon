@@ -6,7 +6,7 @@ const Input = (props) => {
   let inputElement = null;
   const formGroupClasses = [classes.formGroup];
 
-  if (props.invalid && props.shouldValidate && props.touched) {
+  if (props.invalid && props.shouldValidate && props.touched && !props.hideErrors) {
     formGroupClasses.push(classes.formGroupIsInvalid);
   }
 
@@ -51,14 +51,16 @@ const Input = (props) => {
     <div className={formGroupClasses.join(' ')}>
       {/*todo add id and for*/}
       {/*todo add helpers like max size and authorized file ext */}
-      <label className={classes.formGroup__label}>
-        {props.label}
-        {!!props.required &&
+      {props.label &&
+        <label className={classes.formGroup__label}>
+          {props.label}
+          {!!props.required &&
           <span>*</span>
-        }
-      </label>
+          }
+        </label>
+      }
       {inputElement}
-      {!!props.errors && !!props.errors.length &&
+      {!!props.errors && !!props.errors.length && !props.hideErrors &&
         <div className="errors" style={{'color': 'red'}}>
           {props.errors.map(error => (
             <p key={error}>
