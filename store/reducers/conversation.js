@@ -5,6 +5,7 @@ const API_STATE_ACTION = {
   postConversation: 'postConversation',
   getConversation: 'getConversation',
   checkConversation: 'checkConversation',
+  sendMessage: 'sendMessage',
 };
 
 const initialState = {
@@ -27,6 +28,11 @@ const initialState = {
       success: false,
       loading: false,
       hasConversation: null,
+    },
+    sendMessage: {
+      error: null,
+      success: false,
+      loading: false,
     },
   },
 };
@@ -149,6 +155,43 @@ const checkConversationClear = (state, action) => {
   });
 };
 
+const sendMessageStart = (state, action) => {
+  return updateObject(state, {
+    apiState: updateApiState(state.apiState, API_STATE_ACTION.sendMessage, {
+      error: null,
+      success: false,
+      loading: true,
+    })
+  });
+};
+
+const sendMessageSuccess = (state, action) => {
+  return updateObject(state, {
+    apiState: updateApiState(state.apiState, API_STATE_ACTION.sendMessage, {
+      success: true,
+      loading: false,
+    })
+  });
+};
+
+const sendMessageFail = (state, action) => {
+  return updateObject(state, {
+    apiState: updateApiState(state.apiState, API_STATE_ACTION.sendMessage, {
+      error: action.error,
+      loading: false,
+    })
+  });
+};
+
+const sendMessageClear = (state, action) => {
+  return updateObject(state, {
+    apiState: updateApiState(state.apiState, API_STATE_ACTION.sendMessage, {
+      error: null,
+      success: false,
+    })
+  });
+};
+
 const conversationReducer = (state = initialState, action) => {
   switch (action.type) {
     case actionTypes.POST_CONVERSATION_START: return postConversationStart(state, action);
@@ -165,6 +208,11 @@ const conversationReducer = (state = initialState, action) => {
     case actionTypes.CHECK_CONVERSATION_SUCCESS: return checkConversationSuccess(state, action);
     case actionTypes.CHECK_CONVERSATION_FAIL: return checkConversationFail(state, action);
     case actionTypes.CHECK_CONVERSATION_CLEAR: return checkConversationClear(state, action);
+
+    case actionTypes.SEND_MESSAGE_START: return sendMessageStart(state, action);
+    case actionTypes.SEND_MESSAGE_SUCCESS: return sendMessageSuccess(state, action);
+    case actionTypes.SEND_MESSAGE_FAIL: return sendMessageFail(state, action);
+    case actionTypes.SEND_MESSAGE_CLEAR: return sendMessageClear(state, action);
     default:
       return state;
   }

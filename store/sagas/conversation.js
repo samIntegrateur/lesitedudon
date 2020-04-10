@@ -52,3 +52,20 @@ export function* checkConversationSaga({conversation, firebase}) {
     yield put(actions.checkConversationFail(error));
   }
 }
+
+export function* sendMessageSaga({message, conversationId, firebase}) {
+
+  yield put(actions.sendMessageStart());
+
+  try {
+    const response = yield call(firebase.sendMessage, {message, conversationId});
+    // const responseBody = yield response.json();
+    if (response.error) {
+      yield put(actions.sendMessageFail(response.error));
+    } else {
+      yield put(actions.sendMessageSuccess(response.data));
+    }
+  } catch (error) {
+    yield put(actions.sendMessageFail(error));
+  }
+}

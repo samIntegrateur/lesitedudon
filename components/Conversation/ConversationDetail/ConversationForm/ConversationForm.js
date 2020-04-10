@@ -1,31 +1,70 @@
-import React, {useState} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import Input from '../../../UI/Input/Input';
 import Button from '../../../UI/Button/Button';
 import {updateForm} from '../../../../shared/form-utils';
 import classes from './ConversationForm.module.css';
 import Spinner from '../../../UI/Spinner/Spinner';
+import * as actions from '../../../../store/actions';
+import {connect} from 'react-redux';
+import FirebaseContext from '../../../../firebase/context';
+import {updateObject} from '../../../../shared/utility';
 
-const ConversationForm = () => {
-  const [formIsValid, setFormIsValid] = useState(false);
-  const [hasError, setHasError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [controls, setControls] = useState({
+const ConversationForm = ({conversationId, startConversation, loading, error, success, onSendMessage, onSendMessageClear}) => {
+
+  const messageControlRef = useRef(null);
+
+  const initialFormState = {
     message: {
       elementType: 'textarea',
       elementConfig: {
-        placeholder: 'Envoyer un message'
+        placeholder: 'Envoyer un message',
+        ref: messageControlRef,
       },
       value: '',
       validation: {
         required: true,
       },
       valid: false,
-      touched: false
+      touched: false,
     }
-  });
+  };
+
+  useEffect(() => {
+    if (messageControlRef.current) {
+      messageControlRef.current.focus();
+    }
+  }, [messageControlRef]);
+
+  useEffect(() => {
+    if (startConversation && !controls.message.touched && !controls.message.value) {
+
+      const updatedMessage = updateObject(
+        controls.message,
+        {
+          value: 'Bonjour, je suis intéressé par votre annonce, est-elle toujours d\'actualité ?',
+          valid: true,
+          touched: true,
+        }
+      );
+      const updatedForm = updateObject(controls, {
+        message: updatedMessage
+      });
+
+      setControls(updatedForm);
+      setFormIsValid(true);
+    }
+  }, [startConversation]);
+
+  const {firebase} = useContext(FirebaseContext);
+  const [formIsValid, setFormIsValid] = useState(false);
+  const [controls, setControls] = useState(initialFormState);
 
   const inputChangedHandler = (event, controlName) => {
     event.persist();
+
+    if (error || success) {
+      onSendMessageClear();
+    }
 
     const { updatedForm, updatedFormValidity } = updateForm(
       event, controlName, controls
@@ -37,9 +76,8 @@ const ConversationForm = () => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    setIsLoading(true);
-    // todo send message fn
-    setIsLoading(false);
+    onSendMessage(controls.message.value, conversationId, firebase);
+    setControls(initialFormState);
   };
 
   return (
@@ -57,7 +95,7 @@ const ConversationForm = () => {
         changed={(event) => inputChangedHandler(event, 'message')}
       />
       {
-        isLoading
+        loading
         ? <Spinner small />
         : (
             <Button
@@ -69,8 +107,8 @@ const ConversationForm = () => {
           )
       }
       {
-        hasError && (
-          <p className="error">{hasError.message}</p>
+        error && (
+          <p className="error">{error.message}</p>
         )
       }
 
@@ -78,4 +116,20 @@ const ConversationForm = () => {
   );
 };
 
-export default ConversationForm;
+
+const mapStateToProps = state => {
+  return {
+    loading: state.conversation.apiState.sendMessage.loading,
+    error: state.conversation.apiState.sendMessage.error,
+    success: state.conversation.apiState.sendMessage.success,
+  }
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    onSendMessage: (message, conversationId, firebase) => dispatch(actions.sendMessage(message, conversationId, firebase)),
+    onSendMessageClear: () => dispatch(actions.sendMessageClear()),
+  }
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ConversationForm);

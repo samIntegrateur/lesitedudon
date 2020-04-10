@@ -68,3 +68,24 @@ export const sanitizeOfferFromFirebase = (offer) => {
     dateUpdated: fromUnixTime(itemData.dateUpdated.seconds),
   }
 };
+
+export const sanitizeConversationsFromFirebase = (snapshot) => {
+  // todo
+};
+
+export const sanitizeConversationFromFirebase = (conversation) => {
+  const itemData = conversation.data();
+  return {
+    ...itemData,
+    dateCreated: fromUnixTime(itemData.dateCreated.seconds),
+    dateUpdated: fromUnixTime(itemData.dateUpdated.seconds),
+    messages:  itemData.messages
+      ? itemData.messages.map(message => {
+          return {
+            ...message,
+            timestamp: fromUnixTime(message.timestamp.seconds)
+          }
+        })
+      : []
+  }
+};

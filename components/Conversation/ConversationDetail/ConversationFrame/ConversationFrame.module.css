@@ -1,6 +1,8 @@
 .conversation {
   padding: var(--space-md);
   background-color: #f2f2f2;
+  height: 50vh;
+  overflow-y: auto;
 }
 
 .conversation_messageList,
@@ -39,6 +41,8 @@
 }
 
 .conversation_messageTime {
+  white-space: nowrap;
+
   &::before {
     padding: 0 0.3em;
     content: '-';
@@ -58,8 +62,15 @@
 
 .isMe {
   align-self: flex-end;
+  display: flex;
+  justify-content: flex-end;
+
+  & .conversation_message {
+    text-align: right;
+  }
 
   & .conversation_messageTextWrapper {
+    text-align: left;
     background-color: #9acbff;
     border-bottom-right-radius: 0;
   }

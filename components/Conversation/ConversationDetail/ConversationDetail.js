@@ -4,32 +4,95 @@ import OfferPreview from '../../Offer/OfferPreview/OfferPreview';
 import Link from 'next/link';
 import ConversationFrame from './ConversationFrame/ConversationFrame';
 import ConversationForm from './ConversationForm/ConversationForm';
+import Spinner from '../../UI/Spinner/Spinner';
 
-const ConversationDetail = ({conversation, offer, offerError, user}) => {
+const ConversationDetail = ({id, user, firebase}) => {
 
-  const {askerUser, receiverUser} = conversation;
+  const [conversation, setConversation] = useState(null);
+  const [convError, setConvError] = useState(null);
+  const [convLoading, setConvLoading] = useState(true);
+  const [offerId, setOfferId] = useState(null);
+  const [offer, setOffer] = useState(false);
+  const [offerLoading, setOfferLoading] = useState(true);
+  const [offerError, setOfferError] = useState(false);
 
   const [me, setMe] = useState(null);
   const [otherUser, setOtherUser] = useState(null);
   const [isMyOffer, setIsMyOffer] = useState(null);
 
   useEffect(() => {
-    if (user && user.username) {
-      if (user.username === askerUser) {
-        setMe(askerUser);
-        setOtherUser(receiverUser);
-        setIsMyOffer(false);
-      } else if (user.username === receiverUser) {
-        setMe(receiverUser);
-        setOtherUser(askerUser);
-        setIsMyOffer(true);
+    let unsubscribe;
+    if (user && user.username && firebase && id) {
+      setConvLoading(true);
+      unsubscribe = firebase.subscribeToConversation({
+        conversationId: id,
+        handleSnapshot: (conversationSnapshot) => {
+          console.log('conversationSnapshot', conversationSnapshot);
+          setConvLoading(false);
+          handleConversationSnapshot(conversationSnapshot);
+        },
+        handleError: (error) => {
+          setConvLoading(false);
+          setConvError(error);
+        }
+      })
+    }
+
+    return () => {
+      if(unsubscribe) {
+        unsubscribe();
       }
     }
-  }, [user, askerUser, receiverUser, setMe, setOtherUser, setIsMyOffer]);
+  }, [user, firebase, id]);
 
+  useEffect(() => {
+    if (user && user.username && conversation && conversation.askerUser && conversation.receiverUser) {
+      console.log('setIdentities');
+      setIdentities();
+    }
+  }, [user, conversation, setMe, setOtherUser, setIsMyOffer]);
 
-  let offerTitle = null;
-  let offerDisplay = null;
+  const handleConversationSnapshot = (conversationSnapshot) => {
+    setConversation(conversationSnapshot);
+    const id = conversationSnapshot.offer;
+    if (id !== offerId) {
+      setOfferId(id);
+      getOffer(id);
+    }
+  };
+
+  const setIdentities = () => {
+    if (user.username === conversation.askerUser) {
+      setMe(conversation.askerUser);
+      setOtherUser(conversation.receiverUser);
+      setIsMyOffer(false);
+    } else if (user.username === conversation.receiverUser) {
+      setMe(conversation.receiverUser);
+      setOtherUser(conversation.askerUser);
+      setIsMyOffer(true);
+    }
+  };
+
+  const getOffer = (id) => {
+    setOfferLoading(true);
+    firebase.getOffer({offerId: id})
+      .then(offer => {
+        setOfferLoading(false);
+        setOffer(offer);
+      })
+      .catch(error => {
+        setOfferLoading(false);
+        setOfferError(error);
+      });
+  };
+
+  let offerTitle, offerDisplay, conversationDisplay = null;
+
+  if (isMyOffer !== null) {
+    offerTitle = isMyOffer
+      ? <h2>Mon annonce</h2>
+      : <h2>L'annonce de {otherUser}</h2>
+  }
 
   if (offerError) {
     offerDisplay = (
@@ -38,7 +101,12 @@ const ConversationDetail = ({conversation, offer, offerError, user}) => {
         {offerError.message ? <p className="error">{offerError.message}</p> : null}
       </>
     );
-  } else if (offer) {
+  }  else if (offerLoading) {
+    offerDisplay = (
+      <Spinner />
+    )
+  }
+  else if (offer) {
     offerDisplay = (
       <>
         {offerTitle}
@@ -51,41 +119,27 @@ const ConversationDetail = ({conversation, offer, offerError, user}) => {
     );
   }
 
-  if (isMyOffer !== null) {
-      offerTitle = isMyOffer
-        ? <h2>Mon annonce</h2>
-        : <h2>L'annonce de {otherUser}</h2>
+  if (convError) {
+    conversationDisplay = (
+      <>
+        <p>Une erreur s'est produite, la conversation n'a pas pu être récupérée.</p>
+        {convError.message ? <p className="error">{convError.message}</p> : null}
+      </>
+    );
   }
-
-
-  const date = new Date();
-  const messages = [
-    {
-      user: 'sam',
-      message: 'Lorem ipsum',
-      timestamp: date,
-    },
-    {
-      user: 'bob',
-      message: 'lorem',
-      timestamp: date,
-    },
-    {
-      user: 'sam',
-      message: 'Lorem ipsum dolor sit amet',
-      timestamp: date,
-    },
-    {
-      user: 'sam',
-      message: 'Lorem ipsum',
-      timestamp: date,
-    },
-    {
-      user: 'bob',
-      message: 'lorem',
-      timestamp: date,
-    },
-  ];
+  else if (convLoading && !conversation) {
+    conversationDisplay = (
+      <Spinner />
+    )
+  } else if (conversation) {
+    conversationDisplay = (
+      <>
+        <ConversationFrame messages={conversation.messages || []} me={me} loadingMessages={convLoading} />
+        <ConversationForm conversationId={id}
+                          startConversation={conversation && conversation.askerUser === me && !conversation.messages} />
+      </>
+    )
+  }
 
   return (
     <article>
@@ -93,8 +147,7 @@ const ConversationDetail = ({conversation, offer, offerError, user}) => {
 
       <div className={classes.conversationDetail}>
         <section className={classes.conversationDetail__conversation}>
-          <ConversationFrame messages={messages} me={me} />
-          <ConversationForm />
+          {conversationDisplay}
         </section>
         <section className={classes.conversationDetail__offer}>
           {offerDisplay}

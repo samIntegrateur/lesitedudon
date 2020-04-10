@@ -105,3 +105,39 @@ export const checkConversationClear = () => {
     type: actionTypes.CHECK_CONVERSATION_CLEAR,
   }
 };
+
+// SEND MESSAGE
+export const sendMessage = (message, conversationId, firebase) => {
+  return {
+    type: actionTypes.SEND_MESSAGE,
+    message,
+    conversationId,
+    firebase,
+  }
+};
+
+export const sendMessageStart = () => {
+  return {
+    type: actionTypes.SEND_MESSAGE_START,
+  }
+};
+
+export const sendMessageSuccess = (id) => {
+  return {
+    type: actionTypes.SEND_MESSAGE_SUCCESS,
+    id,
+  }
+};
+
+export const sendMessageFail = (error) => {
+  return {
+    type: actionTypes.SEND_MESSAGE_FAIL,
+    error,
+  }
+};
+
+export const sendMessageClear = () => {
+  return {
+    type: actionTypes.SEND_MESSAGE_CLEAR,
+  }
+};

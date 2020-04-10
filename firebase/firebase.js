@@ -1,5 +1,9 @@
 import firebaseConfig from "./config";
-import {sanitizeOfferFromFirebase, sanitizeOffersFromFirebase} from '../shared/sanitize';
+import {
+  sanitizeConversationFromFirebase,
+  sanitizeOfferFromFirebase,
+  sanitizeOffersFromFirebase
+} from '../shared/sanitize';
 
 class Firebase {
   constructor(app) {
@@ -90,7 +94,7 @@ class Firebase {
         if (!snap.exists) {
           handleError({message: 'La conversation est introuvable.'});
         } else {
-          const conversation = snap.data();
+          const conversation = sanitizeConversationFromFirebase(snap);
           handleSnapshot(conversation);
         }
       }, (error) => {
@@ -161,6 +165,11 @@ class Firebase {
   postConversation = async (args) => {
     const postConversationCallable = this.functions.httpsCallable('postConversation');
     return postConversationCallable(args);
+  };
+
+  sendMessage = async (args) => {
+    const sendMessageCallable = this.functions.httpsCallable('sendMessage');
+    return sendMessageCallable(args);
   };
 
 }

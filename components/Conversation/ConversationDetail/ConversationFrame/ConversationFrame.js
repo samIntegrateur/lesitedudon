@@ -1,9 +1,21 @@
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 import classes from './ConversationFrame.module.css';
+import Spinner from '../../../UI/Spinner/Spinner';
+import DateTime from '../../../UI/DateTime/DateTime';
 
-const ConversationFrame = ({messages, me}) => {
+const ConversationFrame = ({messages, me, loadingMessages}) => {
+
+  const frameRef = useRef(null);
+
+  useEffect(() => {
+    if (frameRef.current) {
+      frameRef.current.scrollTop = frameRef.current.scrollHeight;
+    }
+  }, [frameRef]);
+
+
   return (
-    <div className={classes.conversation}>
+    <div className={classes.conversation} ref={frameRef}>
       <ul className={classes.conversation_messageList}>
         {messages.map((message, key) => (
           <li key={key} className={`${classes.conversation_messageListItem} ${message.user === me ? classes.isMe : classes.isYou}`}>
@@ -18,13 +30,16 @@ const ConversationFrame = ({messages, me}) => {
                   {message.user === me ? 'Moi' : message.user}
                 </h3>
                 <span className={classes.conversation_messageTime}>
-                  10/12/20
+                  <DateTime date={message.timestamp} />
                 </span>
               </div>
             </div>
           </li>
         ))}
       </ul>
+      {loadingMessages &&
+        <Spinner small />
+      }
     </div>
   );
 };

@@ -365,6 +365,70 @@ exports.getConversation = enhancedFunctions.https.onCall(async (data, context) =
   });
 });
 
+
+// SEND MESSAGE
+exports.sendMessage = enhancedFunctions.https.onCall(async (data, context) => {
+  checkAuthentication(context);
+
+  const validKeys = {
+    message: 'string',
+    conversationId: 'string',
+  };
+  dataValidator(data, validKeys);
+
+  const userProfile = await admin.firestore().collection('publicProfiles')
+    .where('userId', '==', context.auth.uid).limit(1).get();
+
+  if (userProfile.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'utilisateur n\'a pas pu être trouvé.');
+  }
+
+  const username = userProfile.docs[0].id;
+  console.log('username is ', username);
+
+  const conversation = await admin.firestore().collection('conversations').doc(data.conversationId).get();
+
+  if (conversation.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'La conversation n\'a pas pu être trouvée.');
+  }
+
+  const conversationData = conversation.data();
+  console.log('conversationData ', conversationData);
+
+  if (conversationData.askerUser !== username && conversationData.receiverUser !== username) {
+    throw new functions.https.HttpsError('permission-denied',
+      'Vous n\'avez pas accès à cette conversation.');
+  }
+
+  return new Promise((resolve, reject) => {
+
+    const newDate = new Date();
+
+    const messageList = conversationData.messages || [];
+    const newMessage = {
+      user: username,
+      message: data.message,
+      timestamp: newDate,
+    };
+
+    conversation.ref
+      .update({
+        dateUpdated: newDate,
+        messages: [
+          ...messageList,
+          newMessage,
+        ]
+      }).then((res) => {
+        console.log('Conversation has been updated ', res);
+        return resolve(true);
+    }).catch((error) => {
+      return reject(error);
+    });
+  });
+});
+
 // POST CONVERSATION
 // Create a new conversation between 2 users concerning an offer from one of them
 // askerUser is the user interested by the offer and want to contact the author
