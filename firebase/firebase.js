@@ -1,6 +1,6 @@
 import firebaseConfig from "./config";
 import {
-  sanitizeConversationFromFirebase,
+  sanitizeConversationFromFirebase, sanitizeConversationsFromFirebase,
   sanitizeOfferFromFirebase,
   sanitizeOffersFromFirebase
 } from '../shared/sanitize';
@@ -86,22 +86,6 @@ class Firebase {
       });
   };
 
-  // todo: make database rules to ensure user is involved
-  subscribeToConversation = ({conversationId, handleSnapshot, handleError}) => {
-    let query = this.db.collection('conversations').doc(conversationId);
-    return query
-      .onSnapshot(snap => {
-        if (!snap.exists) {
-          handleError({message: 'La conversation est introuvable.'});
-        } else {
-          const conversation = sanitizeConversationFromFirebase(snap);
-          handleSnapshot(conversation);
-        }
-      }, (error) => {
-        handleError(error);
-      })
-  };
-
   getOffer = async ({offerId}) => {
     const query = this.db.collection('offers').doc(offerId);
     return await query.get()
@@ -127,12 +111,65 @@ class Firebase {
     return postOfferCallable(datas);
   };
 
+  // withOffer false: we just return the id, true, we get the full offer
+  // todo conv as we dont need all data ?
+  // todo, this can become heavy, limit to 10 ? small versions of offers / conv as we dont need all data ?
+  subscribeToUserConversations = ({username, handleSnapshot, handleError, withOffer = true}) => {
+    return this.db.collection('conversations')
+      .where('users', 'array-contains-any', [username])
+      .onSnapshot(snap => {
+        const sanitizedConversations = sanitizeConversationsFromFirebase(snap);
+
+        if (!withOffer) {
+          handleSnapshot(sanitizedConversations);
+        } else {
+          const mapLoop = async () => {
+            const conversationsWithOffer = sanitizedConversations.map(async conversation => {
+              const offerResult = await this.getOffer({offerId: conversation.offer});
+              return {
+                ...conversation,
+                offer: offerResult
+              }
+            });
+
+            const result = await Promise.all(conversationsWithOffer);
+            return result;
+          };
+          mapLoop().then(result => {
+            handleSnapshot(result);
+          }).catch(error => {
+            handleError(error);
+          })
+        }
+
+      }, (error) => {
+        handleError(error);
+      })
+  };
+
+  // todo: make database rules to ensure user is involved
+  subscribeToConversation = ({conversationId, handleSnapshot, handleError}) => {
+    let query = this.db.collection('conversations').doc(conversationId);
+    return query
+      .onSnapshot(snap => {
+        if (!snap.exists) {
+          handleError({message: 'La conversation est introuvable.'});
+        } else {
+          const conversation = sanitizeConversationFromFirebase(snap);
+          handleSnapshot(conversation);
+        }
+      }, (error) => {
+        handleError(error);
+      })
+  };
+
   checkConversation = async (args) => {
     const checkConversationCallable = this.functions.httpsCallable('checkConversation');
     return checkConversationCallable(args);
   };
 
   // withOffer false: we just return the id, true, we get the full offer
+  // todo: sanitize if used again
   getConversation = async ({conversationId, withOffer = true}) => {
     const getConversationCallable = this.functions.httpsCallable('getConversation');
     const conversationResult = await getConversationCallable({conversationId});

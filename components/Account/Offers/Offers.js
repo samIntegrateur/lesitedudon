@@ -8,6 +8,7 @@ const Offers = () => {
   const {user, firebase} = useContext(FirebaseContext);
   const [isLoading, setIsLoading] = useState(false);
 
+  // todo : handle errors
   useEffect(() => {
     let unsubscribe;
     if (user && user.username && firebase) {

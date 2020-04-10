@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import Button from '../../UI/Button/Button';
 import ConversationPreview from '../ConversationPreview/ConversationPreview';
 import classes from './ConversationList.module.css';

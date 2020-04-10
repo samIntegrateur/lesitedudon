@@ -136,7 +136,7 @@ const ConversationDetail = ({id, user, firebase}) => {
       <>
         <ConversationFrame messages={conversation.messages || []} me={me} loadingMessages={convLoading} />
         <ConversationForm conversationId={id}
-                          startConversation={conversation && conversation.askerUser === me && !conversation.messages} />
+                          startConversation={conversation && conversation.askerUser === me && !conversation.messages.length} />
       </>
     )
   }

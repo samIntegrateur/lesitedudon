@@ -70,13 +70,22 @@ export const sanitizeOfferFromFirebase = (offer) => {
 };
 
 export const sanitizeConversationsFromFirebase = (snapshot) => {
-  // todo
+  const conversations = [];
+  if (snapshot.empty) {
+    return conversations;
+  }
+
+  snapshot.forEach(doc => {
+    conversations.push(sanitizeConversationFromFirebase(doc));
+  });
+  return conversations;
 };
 
 export const sanitizeConversationFromFirebase = (conversation) => {
   const itemData = conversation.data();
   return {
     ...itemData,
+    id: conversation.id,
     dateCreated: fromUnixTime(itemData.dateCreated.seconds),
     dateUpdated: fromUnixTime(itemData.dateUpdated.seconds),
     messages:  itemData.messages

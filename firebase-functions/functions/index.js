@@ -516,7 +516,9 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
     const newConversationDocId = newConversationDoc.id;
     const newDate = new Date();
 
+    // nb, users array is more convenient for queries
     newConversationDoc.set({
+      users: [askerUser.id, receiverUser.id],
       askerUser: askerUser.id,
       receiverUser: receiverUser.id,
       offer: offer.id,
