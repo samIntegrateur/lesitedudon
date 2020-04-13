@@ -34,7 +34,7 @@ const OfferDetail = (props) => {
             <span>Offert par <strong>{offer.author}</strong></span>
           </div>
 
-          <div className={classes.offer__desc}>
+          <div className={classes.offer__desc + ' user-content'}>
             {offer.description}
           </div>
 

@@ -21,7 +21,7 @@ const ConversationFrame = ({messages, me, loadingMessages}) => {
           <li key={key} className={`${classes.conversation_messageListItem} ${message.user === me ? classes.isMe : classes.isYou}`}>
             <div className={classes.conversation_message}>
               <blockquote className={classes.conversation_messageTextWrapper}>
-                <p className={classes.conversation_messageText}>
+                <p className={classes.conversation_messageText + ' user-content'}>
                   {message.message}
                 </p>
               </blockquote>

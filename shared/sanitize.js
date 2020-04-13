@@ -1,7 +1,7 @@
-import {fromUnixTime} from 'date-fns';
 
 // There are differences between what api rest returns and what firebase functions does
 import FireStoreParser from 'firestore-parser';
+import {convertUnixTime} from './utility';
 
 export const sanitizeOffersFromRest = (data) => {
 
@@ -64,35 +64,36 @@ export const sanitizeOfferFromFirebase = (offer) => {
     // Here we receive the whole author reference, but we just want the id
     author: itemData.author.id,
     // Convert date timestamp
-    dateCreated: fromUnixTime(itemData.dateCreated.seconds),
-    dateUpdated: fromUnixTime(itemData.dateUpdated.seconds),
+    dateCreated: convertUnixTime(itemData.dateCreated),
+    dateUpdated: convertUnixTime(itemData.dateUpdated),
   }
 };
 
-export const sanitizeConversationsFromFirebase = (snapshot) => {
+export const sanitizeConversationsFromFirebase = (datas, isSnapshot = true) => {
   const conversations = [];
-  if (snapshot.empty) {
+  if (isSnapshot && datas.empty) {
     return conversations;
   }
 
-  snapshot.forEach(doc => {
-    conversations.push(sanitizeConversationFromFirebase(doc));
+  datas.forEach(doc => {
+    conversations.push(sanitizeConversationFromFirebase(doc, isSnapshot));
   });
   return conversations;
 };
 
-export const sanitizeConversationFromFirebase = (conversation) => {
-  const itemData = conversation.data();
+export const sanitizeConversationFromFirebase = (conversation, isSnapshot = true) => {
+  const itemData = isSnapshot ? conversation.data() : conversation.datas;
+  console.log('itemData', itemData.dateUpdated);
   return {
     ...itemData,
     id: conversation.id,
-    dateCreated: fromUnixTime(itemData.dateCreated.seconds),
-    dateUpdated: fromUnixTime(itemData.dateUpdated.seconds),
+    dateCreated: convertUnixTime(itemData.dateCreated),
+    dateUpdated: convertUnixTime(itemData.dateUpdated),
     messages:  itemData.messages
       ? itemData.messages.map(message => {
           return {
             ...message,
-            timestamp: fromUnixTime(message.timestamp.seconds)
+            timestamp: convertUnixTime(itemData.dateUpdated)
           }
         })
       : []

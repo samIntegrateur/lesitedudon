@@ -69,3 +69,21 @@ export function* sendMessageSaga({message, conversationId, firebase}) {
     yield put(actions.sendMessageFail(error));
   }
 }
+
+export function* getConversationsSaga({firebase}) {
+
+  yield put(actions.getConversationsStart());
+
+  try {
+    const response = yield call(firebase.getUserConversations, {});
+
+    // const responseBody = yield response.json();
+    if (response.error) {
+      yield put(actions.getConversationsFail(response.error));
+    } else {
+      yield put(actions.getConversationsSuccess(response.data));
+    }
+  } catch (error) {
+    yield put(actions.getConversationsFail(error));
+  }
+}

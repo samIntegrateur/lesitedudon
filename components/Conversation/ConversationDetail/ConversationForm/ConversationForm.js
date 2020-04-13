@@ -36,11 +36,7 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
   }, [messageControlRef]);
 
   useEffect(() => {
-    console.log('startConversation', startConversation);
-    console.log('controls.message.touched ', !!controls.message.touched );
-    console.log('controls.message.value ', !!controls.message.value );
     if (startConversation && !controls.message.touched && !controls.message.value) {
-    console.log('should set auto message');
       const updatedMessage = updateObject(
         controls.message,
         {

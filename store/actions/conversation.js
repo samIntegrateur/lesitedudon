@@ -141,3 +141,37 @@ export const sendMessageClear = () => {
     type: actionTypes.SEND_MESSAGE_CLEAR,
   }
 };
+
+// GET CONVERSATIONS
+export const getConversations = (firebase) => {
+  return {
+    type: actionTypes.GET_CONVERSATIONS,
+    firebase,
+  }
+};
+
+export const getConversationsStart = () => {
+  return {
+    type: actionTypes.GET_CONVERSATIONS_START,
+  }
+};
+
+export const getConversationsSuccess = (conversations) => {
+  return {
+    type: actionTypes.GET_CONVERSATIONS_SUCCESS,
+    conversations,
+  }
+};
+
+export const getConversationsFail = (error) => {
+  return {
+    type: actionTypes.GET_CONVERSATIONS_FAIL,
+    error,
+  }
+};
+
+export const getConversationsClear = () => {
+  return {
+    type: actionTypes.GET_CONVERSATIONS_CLEAR,
+  }
+};

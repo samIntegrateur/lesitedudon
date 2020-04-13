@@ -209,3 +209,7 @@ h6 {
     margin-bottom: 0;
   }
 }
+
+.user-content {
+  white-space: pre-wrap;
+}

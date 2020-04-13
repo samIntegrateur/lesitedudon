@@ -4,6 +4,7 @@ import {updateObject, updateApiState} from '../../shared/utility';
 const API_STATE_ACTION = {
   postConversation: 'postConversation',
   getConversation: 'getConversation',
+  getConversations: 'getConversations',
   checkConversation: 'checkConversation',
   sendMessage: 'sendMessage',
 };
@@ -11,6 +12,7 @@ const API_STATE_ACTION = {
 const initialState = {
   conversationId: null,
   conversation: null,
+  conversations: null,
   apiState: {
     postConversation: {
       error: null,
@@ -30,6 +32,11 @@ const initialState = {
       hasConversation: null,
     },
     sendMessage: {
+      error: null,
+      success: false,
+      loading: false,
+    },
+    getConversations: {
       error: null,
       success: false,
       loading: false,
@@ -192,6 +199,44 @@ const sendMessageClear = (state, action) => {
   });
 };
 
+const getConversationsStart = (state, action) => {
+  return updateObject(state, {
+    apiState: updateApiState(state.apiState, API_STATE_ACTION.getConversations, {
+      error: null,
+      success: false,
+      loading: true,
+    })
+  });
+};
+
+const getConversationsSuccess = (state, action) => {
+  return updateObject(state, {
+    conversations: action.conversations,
+    apiState: updateApiState(state.apiState, API_STATE_ACTION.getConversations, {
+      success: true,
+      loading: false,
+    })
+  });
+};
+
+const getConversationsFail = (state, action) => {
+  return updateObject(state, {
+    apiState: updateApiState(state.apiState, API_STATE_ACTION.getConversations, {
+      error: action.error,
+      loading: false,
+    })
+  });
+};
+
+const getConversationsClear = (state, action) => {
+  return updateObject(state, {
+    apiState: updateApiState(state.apiState,  API_STATE_ACTION.getConversations, {
+      error: null,
+      success: false,
+    })
+  });
+};
+
 const conversationReducer = (state = initialState, action) => {
   switch (action.type) {
     case actionTypes.POST_CONVERSATION_START: return postConversationStart(state, action);
@@ -213,6 +258,11 @@ const conversationReducer = (state = initialState, action) => {
     case actionTypes.SEND_MESSAGE_SUCCESS: return sendMessageSuccess(state, action);
     case actionTypes.SEND_MESSAGE_FAIL: return sendMessageFail(state, action);
     case actionTypes.SEND_MESSAGE_CLEAR: return sendMessageClear(state, action);
+
+    case actionTypes.GET_CONVERSATIONS_START: return getConversationsStart(state, action);
+    case actionTypes.GET_CONVERSATIONS_SUCCESS: return getConversationsSuccess(state, action);
+    case actionTypes.GET_CONVERSATIONS_FAIL: return getConversationsFail(state, action);
+    case actionTypes.GET_CONVERSATIONS_CLEAR: return getConversationsClear(state, action);
     default:
       return state;
   }

@@ -116,10 +116,20 @@ exports.imageProcess = enhancedFunctions.storage.object().onFinalize(async (obje
   console.log('Thumbnail created at', tempLocalThumbFile);
 
   // Uploading both.
-  await bucket.upload(tempLocalFile, {destination: filePath, metadata: {metadata: metadata}});
+  await bucket.upload(tempLocalFile, {
+    destination: filePath,
+    predefinedAcl: 'publicRead',
+    public: true,
+    metadata: {metadata: metadata}
+  });
   console.log('Optimized uploaded to Storage at', filePath);
 
-  await bucket.upload(tempLocalThumbFile, {destination: thumbFilePath, metadata: {metadata: metadata}});
+  await bucket.upload(tempLocalThumbFile, {
+    destination: thumbFilePath,
+    predefinedAcl: 'publicRead',
+    public: true,
+    metadata: {metadata: metadata}
+  });
   console.log('Thumbnail uploaded to Storage at', thumbFilePath);
 
   // Once the image has been uploaded delete the local files to free up disk space.
@@ -128,26 +138,36 @@ exports.imageProcess = enhancedFunctions.storage.object().onFinalize(async (obje
 
   // Get the Signed URLs for the thumbnail and original image.
   // Not very clear to me, it saves path to realtime database
-  const config = {
-    action: 'read',
-    expires: '03-01-2500',
-  };
-  const results = await Promise.all([
-    thumbFile.getSignedUrl(config),
-    file.getSignedUrl(config),
-  ]);
-  console.log('Got Signed URLs.');
+  // const config = {
+  //   action: 'read',
+  //   expires: '03-01-2500',
+  // };
+  // const results = await Promise.all([
+  //   thumbFile.getSignedUrl(config),
+  //   file.getSignedUrl(config),
+  // ]);
+  // console.log('Got Signed URLs.');
   // const thumbResult = results[0];
   // const originalResult = results[1];
   // const thumbFileUrl = thumbResult[0];
   // const fileUrl = originalResult[0];
 
+  // NB: one day suddenly, all urls had 403, signed urls can't last more than one or two weeks ??
+  // use a trick https://stackoverflow.com/questions/42956250/get-download-url-from-file-uploaded-with-cloud-functions-for-firebase
+  // limit: the url has "download" and google only authorizes download for this:
+  // if we paste the url in browser it downloads instead of displaying
+  // another way is to construct url, but how avoiding hard coded storage prefix ?
+  const imageMeta = await file.getMetadata();
+  const imageUrl = imageMeta[0].mediaLink;
+  const thumbMeta = await thumbFile.getMetadata();
+  const thumbUrl = thumbMeta[0].mediaLink;
+
   // store refs to appropriate doc (as the filename is the id)
   const docId = path.parse(fileName).name;
   return admin.firestore().collection('offers').doc(docId)
     .update({
-      imageUrl: results[1],
-      thumbUrl: results[0],
+      imageUrl: imageUrl,
+      thumbUrl: thumbUrl,
     }).then((res) => {
       return console.log('Doc references to images have been updated ', res);
     }).catch((error) => {
@@ -171,15 +191,15 @@ exports.createPublicProfile = enhancedFunctions.https.onCall(async (data, contex
     username: 'string'
   });
 
-  const userProfile = await admin.firestore().collection('publicProfiles')
-    .where('userId', '==', context.auth.uid).limit(1).get();
+  const userProfile = await getPublicProfileByAuthContext(context, false);
 
   if (!userProfile.empty){
     throw new functions.https.HttpsError('already-exists',
       'L\'utilisateur existe déjà.');
   }
 
-  const publicProfile = await admin.firestore().collection('publicProfiles').doc(data.username).get();
+  const publicProfile = await getPublicProfileByUserName(data.username, false);
+
   if (publicProfile.exists) {
     throw new functions.https.HttpsError('already-exists',
       'Ce nom d\'utilisateur est déjà pris.');
@@ -223,15 +243,7 @@ exports.postOffer = enhancedFunctions.https.onCall(async (data, context) => {
 
   dataValidator(data, validKeys);
 
-  const user = await admin.firestore().collection('publicProfiles')
-    .where('userId', '==', context.auth.uid)
-    .limit(1)
-    .get();
-
-  if (user.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'L\'utilisateur n\'a pas pu être trouvé.');
-  }
+  const user = await getPublicProfileByAuthContext(context);
 
   const newDate = new Date();
 
@@ -334,23 +346,12 @@ exports.getConversation = enhancedFunctions.https.onCall(async (data, context) =
 
   dataValidator(data, validKeys);
 
-  const userProfile = await admin.firestore().collection('publicProfiles')
-    .where('userId', '==', context.auth.uid).limit(1).get();
-
-  if (userProfile.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'L\'utilisateur n\'a pas pu être trouvé.');
-  }
+  const userProfile = await getPublicProfileByAuthContext(context);
 
   const username = userProfile.docs[0].id;
   console.log('username is ', username);
 
-  const conversation = await admin.firestore().collection('conversations').doc(data.conversationId).get();
-
-  if (conversation.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'La conversation n\'a pas pu être trouvée.');
-  }
+  const conversation = await getConversationById(data.conversationId);
 
   const conversationData = conversation.data();
   console.log('conversationData ', conversationData);
@@ -366,6 +367,26 @@ exports.getConversation = enhancedFunctions.https.onCall(async (data, context) =
 });
 
 
+// GET CONVERSATIONS
+// Return a conversation list
+// We don't make it in front as we need to ensure the user is one of the usernames
+exports.getUserConversations = enhancedFunctions.https.onCall(async (data, context) => {
+  checkAuthentication(context);
+  const userId = context.auth.uid;
+  console.log('get conversations for userId', userId);
+  const snapshot = await admin.firestore().collection('conversations')
+    .where('users', 'array-contains-any', [userId])
+    .get();
+
+  return snapshot.docs.map(doc => {
+    const dataWithId = {
+      datas: doc.data(),
+      id: doc.id,
+    };
+    return dataWithId;
+  });
+});
+
 // SEND MESSAGE
 exports.sendMessage = enhancedFunctions.https.onCall(async (data, context) => {
   checkAuthentication(context);
@@ -376,23 +397,12 @@ exports.sendMessage = enhancedFunctions.https.onCall(async (data, context) => {
   };
   dataValidator(data, validKeys);
 
-  const userProfile = await admin.firestore().collection('publicProfiles')
-    .where('userId', '==', context.auth.uid).limit(1).get();
-
-  if (userProfile.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'L\'utilisateur n\'a pas pu être trouvé.');
-  }
+  const userProfile = await getPublicProfileByAuthContext(context);
 
   const username = userProfile.docs[0].id;
   console.log('username is ', username);
 
-  const conversation = await admin.firestore().collection('conversations').doc(data.conversationId).get();
-
-  if (conversation.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'La conversation n\'a pas pu être trouvée.');
-  }
+  const conversation = await getConversationById(data.conversationId);
 
   const conversationData = conversation.data();
   console.log('conversationData ', conversationData);
@@ -448,15 +458,7 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
       'Vous ne pouvez pas créer une conversation avec vous-même.');
   }
 
-  const userProfile = await admin.firestore().collection('publicProfiles')
-    .where('userId', '==', context.auth.uid).limit(1).get();
-
-  if (userProfile.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'L\'utilisateur n\'a pas pu être trouvé.');
-  }
-
-  console.log('userProfile is ', userProfile.docs[0]);
+  const userProfile = await getPublicProfileByAuthContext(context);
 
   // Important for security, the asker must be the logged user
   if (userProfile.docs[0].id !== data.askerUserId) {
@@ -469,23 +471,10 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
       'Vous ne pouvez pas créer une conversation avec vous-même.');
   }
 
-  const askerUser = await admin.firestore().collection('publicProfiles').doc(data.askerUserId).get();
-
-  if (askerUser.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'L\'utilisateur '+ data.askerUserId + 'n\'a pas pu être trouvé.');
-  }
-
-  console.log('askerUser is ', askerUser);
-
-  const receiverUser = await admin.firestore().collection('publicProfiles').doc(data.receiverUserId).get();
-
-  if (receiverUser.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'L\'utilisateur '+ data.receiverUserId + 'n\'a pas pu être trouvé.');
-  }
-
-  console.log('receiverUser is ', receiverUser);
+  console.log('check askerUserId', data.askerUserId);
+  const askerUser = await getPublicProfileByUserName(data.askerUserId);
+  console.log('check receiverUserId', data.receiverUserId);
+  const receiverUser = await getPublicProfileByUserName(data.receiverUserId);
 
   const offer = await admin.firestore().collection('offers').doc(data.offerId).get();
 
@@ -516,9 +505,13 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
     const newConversationDocId = newConversationDoc.id;
     const newDate = new Date();
 
-    // nb, users array is more convenient for queries
+    const askerUserData = askerUser.data();
+    const receiverUserData = receiverUser.data();
+
+    // nb, users array is more convenient for queries (see subscribeToUserConversations)
+    // and userId better for security rules
     newConversationDoc.set({
-      users: [askerUser.id, receiverUser.id],
+      users: [askerUserData.userId, receiverUserData.userId],
       askerUser: askerUser.id,
       receiverUser: receiverUser.id,
       offer: offer.id,
@@ -544,23 +537,17 @@ exports.incrementUserOffers = enhancedFunctions.firestore.document('offers/{offe
     console.log('Trying to get the user');
 
     // Author is a reference : https://firebase.google.com/docs/reference/js/firebase.firestore.DocumentReference
-    const user = await admin.firestore().collection('publicProfiles').doc(newOffer.author.id);
-    console.log('user', user);
 
-    const userGet = await user.get();
-    if (userGet.empty) {
-      throw new functions.https.HttpsError('not-found',
-        'L\'utilisateur n\'a pas pu être trouvé.');
-    }
+    const user = await getPublicProfileByUserName(newOffer.author.id);
 
-    const userData = await user.get().then(doc => doc.data());
+    const userData = user.data();
     console.log('userData', userData);
     let previousOffersNumber = userData.offersNumber;
     console.log('Previous OffersNumber', previousOffersNumber);
     const newValue = previousOffersNumber + 1;
 
     return new Promise((resolve, reject) => {
-      user.update({
+      user.ref.update({
         offersNumber: newValue,
       }).then((res) => {
         console.log('Offers number as been incremented to ', newValue);
@@ -597,4 +584,43 @@ function checkAuthentication(context, adminRequired) {
     throw new functions.https.HttpsError('permission-denied',
       'Vous devez être admin pour accéder à cette fonctionnalité.');
   }
+}
+
+async function getPublicProfileByUserName(username, errorIfEmpty = true) {
+  const user = await admin.firestore().collection('publicProfiles').doc(username).get();
+
+  if (errorIfEmpty && user.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'utilisateur n\'a pas pu être trouvé.');
+  }
+
+  console.log('user is', user.ref.id);
+
+  return user;
+}
+
+async function getPublicProfileByAuthContext(context, errorIfEmpty = true) {
+  const user = await admin.firestore().collection('publicProfiles')
+    .where('userId', '==', context.auth.uid).limit(1).get();
+
+  if (errorIfEmpty && user.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'utilisateur n\'a pas pu être trouvé.');
+  }
+
+  console.log('user is', user.docs[0].id);
+
+  return user;
+}
+
+async function getConversationById(conversationId, errorIfEmpty = true) {
+  const conversation = await admin.firestore().collection('conversations').doc(conversationId).get();
+
+  if (errorIfEmpty && conversation.empty) {
+    throw new functions.https.HttpsError('not-found',
+      'La conversation n\'a pas pu être trouvée.');
+  }
+
+
+  return conversation;
 }
