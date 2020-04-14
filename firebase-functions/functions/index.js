@@ -376,6 +376,7 @@ exports.getUserConversations = enhancedFunctions.https.onCall(async (data, conte
   console.log('get conversations for userId', userId);
   const snapshot = await admin.firestore().collection('conversations')
     .where('users', 'array-contains-any', [userId])
+    .orderBy('dateUpdated', 'desc')
     .get();
 
   return snapshot.docs.map(doc => {
@@ -421,10 +422,24 @@ exports.sendMessage = enhancedFunctions.https.onCall(async (data, context) => {
       user: username,
       message: data.message,
       timestamp: newDate,
+      isRead: false,
     };
+
+    console.log('adding newMessage from ', username);
+
+    const otherUser = (username === conversationData.askerUser) ? conversationData.receiverUser : conversationData.askerUser;
+
+    const previousUnreadMessages = conversationData.unreadMessages[otherUser];
+    const newUnreadMessages = {
+      ...conversationData.unreadMessages,
+      [otherUser]: previousUnreadMessages + 1,
+    };
+    console.log('previousUnreadMessages for other user was ', previousUnreadMessages);
+    console.log('and now ', previousUnreadMessages + 1);
 
     conversation.ref
       .update({
+        unreadMessages: newUnreadMessages,
         dateUpdated: newDate,
         messages: [
           ...messageList,
@@ -438,6 +453,125 @@ exports.sendMessage = enhancedFunctions.https.onCall(async (data, context) => {
     });
   });
 });
+
+// MARK CONVERSATION READ
+exports.markConversationRead = enhancedFunctions.https.onCall(async (data, context) => {
+  checkAuthentication(context);
+  const validKeys = {
+    conversationId: 'string',
+  };
+  dataValidator(data, validKeys);
+
+  const userProfile = await getPublicProfileByAuthContext(context);
+
+  const username = userProfile.docs[0].id;
+  console.log('username is ', username);
+
+  const conversation = await getConversationById(data.conversationId);
+
+  const conversationData = conversation.data();
+  console.log('conversationData ', conversationData);
+
+  if (conversationData.askerUser !== username && conversationData.receiverUser !== username) {
+    throw new functions.https.HttpsError('permission-denied',
+      'Vous n\'avez pas accès à cette conversation.');
+  }
+
+  return new Promise((resolve, reject) => {
+
+    const newMessageList = conversationData.messages.map(message => {
+      if (message.user !== username && !message.isRead) {
+        return {
+          ...message,
+          isRead: true,
+        }
+      } else {
+        return message;
+      }
+    });
+
+    console.log('New message list to be updated', newMessageList);
+
+    const newDate = new Date();
+
+    const newUnreadMessages = {
+      ...conversationData.unreadMessages,
+      [username]: 0,
+    };
+    console.log('previousUnreadMessages for user was ', conversationData.unreadMessages[username]);
+    console.log('set it to', newUnreadMessages[username]);
+
+    conversation.ref
+      .update({
+        unreadMessages: newUnreadMessages,
+        dateUpdated: newDate,
+        messages: newMessageList,
+      }).then((res) => {
+      console.log('Conversation has been updated ', res);
+      return resolve(true);
+    }).catch((error) => {
+      return reject(error);
+    });
+  });
+});
+
+// UPDATE PROFILE NEW MESSAGES
+exports.updateProfileNewMessages = enhancedFunctions.firestore
+  .document('conversations/{conversationId}')
+  .onUpdate(async (change, context) => {
+    console.log('A conversation has been updated');
+    const previousValue = change.before.data();
+    const newValue = change.after.data();
+
+    const askerUserName = previousValue.askerUser;
+    const receiverUserName = previousValue.receiverUser;
+
+    const previousAskerUnreadMessages = previousValue.unreadMessages[askerUserName];
+    const newAskerUnreadMessages = newValue.unreadMessages[askerUserName];
+    console.log('previousAskerUnreadMessages', previousAskerUnreadMessages);
+    console.log('newAskerUnreadMessages', newAskerUnreadMessages);
+
+    const previousReceiverUnreadMessages = previousValue.unreadMessages[askerUserName];
+    const newReceiverUnreadMessages = newValue.unreadMessages[receiverUserName];
+    console.log('previousReceiverUnreadMessages', previousReceiverUnreadMessages);
+    console.log('newReceiverUnreadMessages', newReceiverUnreadMessages);
+
+    let difference;
+    let userToUpdate;
+
+    if (previousAskerUnreadMessages !== newAskerUnreadMessages) {
+      difference = newAskerUnreadMessages - previousAskerUnreadMessages;
+      userToUpdate = askerUserName;
+      console.log('unreadMessages value has changed for asker, difference is', difference);
+    } else if (previousReceiverUnreadMessages !== newReceiverUnreadMessages) {
+      difference = newReceiverUnreadMessages - previousReceiverUnreadMessages;
+      userToUpdate = receiverUserName;
+    } else {
+      return console.log('No new unread message.');
+    }
+
+    if (!difference || typeof difference !== 'number') {
+      return console.error('Something wrong happened, difference is not correct', difference);
+    }
+
+    const user = await getPublicProfileByUserName(userToUpdate);
+    const userData = user.data();
+    console.log('userData', userData);
+    const previousMessageCount = userData.newMessages || 0;
+
+    const newMessageCount = previousMessageCount + difference;
+    console.log('newMessageCount to be set', newMessageCount);
+
+    return new Promise((resolve, reject) => {
+      user.ref.update({
+        newMessages: newMessageCount,
+      }).then((res) => {
+        console.log('newMessage count has been set to ', newMessageCount, ' for user ', user.id);
+        return resolve(res);
+      }).catch(reject)
+    });
+
+  });
 
 // POST CONVERSATION
 // Create a new conversation between 2 users concerning an offer from one of them
@@ -512,6 +646,10 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
     // and userId better for security rules
     newConversationDoc.set({
       users: [askerUserData.userId, receiverUserData.userId],
+      unreadMessages: {
+        [askerUser.id]: 0,
+        [receiverUser.id]: 0,
+      },
       askerUser: askerUser.id,
       receiverUser: receiverUser.id,
       offer: offer.id,
@@ -623,4 +761,11 @@ async function getConversationById(conversationId, errorIfEmpty = true) {
 
 
   return conversation;
+}
+
+function getUnreadMessagesLength(messages, username) {
+  const unreadMessage = messages.filter(message => {
+    return message.user !== username && !message.isRead;
+  });
+  return unreadMessage.length || 0;
 }

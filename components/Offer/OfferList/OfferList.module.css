@@ -14,7 +14,7 @@
   display: block;
   border: 1px solid var(--border-color);
   text-decoration: none;
-  transition: border-color ease-out .2s;
+  transition: border-color ease-out 0.2s;
 }
 
 .offerList__itemLink:hover,

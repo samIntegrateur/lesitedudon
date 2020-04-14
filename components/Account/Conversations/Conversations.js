@@ -33,7 +33,7 @@ const Conversations = (props) => {
       </>
     );
   } else {
-    display = <ConversationList conversations={conversations} />
+    display = <ConversationList username={user.username} conversations={conversations} />
   }
 
   return (

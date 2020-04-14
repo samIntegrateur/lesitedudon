@@ -47,17 +47,28 @@ const ConversationDetail = ({id, user, firebase}) => {
 
   useEffect(() => {
     if (user && user.username && conversation && conversation.askerUser && conversation.receiverUser) {
-      console.log('setIdentities');
       setIdentities();
     }
   }, [user, conversation, setMe, setOtherUser, setIsMyOffer]);
 
   const handleConversationSnapshot = (conversationSnapshot) => {
+    checkUnreadMessages(conversationSnapshot.unreadMessages);
     setConversation(conversationSnapshot);
     const id = conversationSnapshot.offer;
     if (id !== offerId) {
       setOfferId(id);
       getOffer(id);
+    }
+  };
+
+  const checkUnreadMessages = (unreadMessages) => {
+    // if new unread messages send markConversationRead
+    if (unreadMessages[user.username] > 0) {
+      try {
+        firebase.markConversationRead({conversationId: id});
+      } catch (e) {
+        console.error('markConversationRead failed', e.text);
+      }
     }
   };
 

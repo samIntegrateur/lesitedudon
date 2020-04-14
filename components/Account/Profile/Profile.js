@@ -6,7 +6,6 @@ import {format} from "date-fns";
 const Profile = () => {
 
   const {user} = useContext(FirebaseContext);
-  console.log('user', user);
 
   const creationDate = new Date(user.metadata.creationTime);
   const formattedDate = format(creationDate, 'dd/MM/yyyy') || creationDate;

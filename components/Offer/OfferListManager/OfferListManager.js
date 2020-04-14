@@ -40,7 +40,7 @@ const OfferListManager = () => {
     setIsLoading(prevState => ({...prevState, [loader]: true}));
     firebase.getOffers({
       limit, orderBy, startAfter
-    }).then(({newOffers, lastItem}) => {
+    }).then(({newOffers = [], lastItem}) => {
       if (isMounted) {
         setIsLoading(prevState => ({...prevState, [loader]: false}));
         if (!lastItem || newOffers.length < limit) {

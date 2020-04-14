@@ -83,7 +83,7 @@ export const sanitizeConversationsFromFirebase = (datas, isSnapshot = true) => {
 
 export const sanitizeConversationFromFirebase = (conversation, isSnapshot = true) => {
   const itemData = isSnapshot ? conversation.data() : conversation.datas;
-  console.log('itemData', itemData.dateUpdated);
+
   return {
     ...itemData,
     id: conversation.id,
@@ -93,7 +93,7 @@ export const sanitizeConversationFromFirebase = (conversation, isSnapshot = true
       ? itemData.messages.map(message => {
           return {
             ...message,
-            timestamp: convertUnixTime(itemData.dateUpdated)
+            timestamp: convertUnixTime(message.timestamp)
           }
         })
       : []

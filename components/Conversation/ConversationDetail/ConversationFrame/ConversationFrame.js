@@ -9,9 +9,10 @@ const ConversationFrame = ({messages, me, loadingMessages}) => {
 
   useEffect(() => {
     if (frameRef.current) {
+      // todo: compare message length, we don't want to scroll if only a read has changed
       frameRef.current.scrollTop = frameRef.current.scrollHeight;
     }
-  }, [frameRef]);
+  }, [frameRef, messages]);
 
 
   return (

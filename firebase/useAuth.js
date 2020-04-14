@@ -30,12 +30,14 @@ function useAuth() {
               });
               firebaseInstance.auth.currentUser.getIdTokenResult(true)
                 .then(token => {
+                  console.log('userDatas[0]', userDatas[0]);
                   setUser({
                     ...userResult,
                     // custom claims provided in our cloud functions
                     isAdmin: token.claims.admin,
                     username: userSnapshot.empty ? null : userSnapshot.docs[0].id,
-                    userProfile: userDatas[0] || null
+                    userProfile: userDatas[0] || null,
+                    newMessages: userDatas[0].newMessages || null,
                   });
                   setLoading(false);
                 }).catch(e => {

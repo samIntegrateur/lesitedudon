@@ -4,6 +4,7 @@ import classes from './Header.module.css';
 import Link from 'next/link';
 import {FirebaseContext} from '../../firebase';
 import Spinner from '../../components/UI/Spinner/Spinner';
+import Badge from '../../components/UI/Badge/Badge';
 
 const Header = () => {
 
@@ -30,6 +31,16 @@ const Header = () => {
     }
   }
 
+  let badgeDisplay;
+  if (user && user.newMessages && user.newMessages > 0) {
+    const title = `Vous avez ${user.newMessages} ${user.newMessages > 1 ? 'nouveaux messages' : 'nouveau message'}`;
+    badgeDisplay = (
+      <Badge style="secondary" super title={title}>
+        {user.newMessages}
+      </Badge>
+    );
+  }
+
   return (
     <header className={classes.header}>
       <Container>
@@ -46,11 +57,22 @@ const Header = () => {
             <ul className={classes.header__navList}>
 
               {!!user &&
-                <li className={classes.header__navListItem}>
-                  <Link href="/compte">
-                    <a className={classes.header__navLink}>Mon compte</a>
-                  </Link>
-                </li>
+                <>
+                  <li className={classes.header__navListItem}>
+                    <Link href="/compte?tab=Conversations">
+                      <a className={classes.header__navLink}>
+                        <span>Messages</span>
+                        {badgeDisplay}
+                      </a>
+                    </Link>
+                  </li>
+
+                  <li className={classes.header__navListItem}>
+                    <Link href="/compte">
+                      <a className={classes.header__navLink}>Mon compte</a>
+                    </Link>
+                  </li>
+                </>
               }
 
               <li className={classes.header__navListItem}>

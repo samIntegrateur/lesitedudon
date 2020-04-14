@@ -7,14 +7,18 @@ import {
 
 class Firebase {
   constructor(app) {
-    if(!firebaseInstance) {
+    // Fix, on hot reload, everything seems reset (including firebaseInstance)
+    // but apps still contains old instance, and initialize would create error
+    if (!app.apps.length) {
       const fireApp = app.initializeApp(firebaseConfig);
-
-      this.auth = app.auth();
-      this.db = app.firestore();
       this.functions = fireApp.functions('europe-west1');
-      this.storage = app.storage();
+    } else {
+      this.functions = app.functions()
     }
+
+    this.auth = app.auth();
+    this.db = app.firestore();
+    this.storage = app.storage();
   }
 
   login = async ({email, password}) => {
@@ -111,6 +115,8 @@ class Firebase {
     return postOfferCallable(datas);
   };
 
+  // can be slow, get offers in a second time with local loader ? or in BE ?
+  // in both case we can have multiple references for the same (if we created an offer) so avoid getting it multiple times
   getUserConversations = async ({withOffer = true}) => {
     const getUserConversationsCallable = this.functions.httpsCallable('getUserConversations');
     const conversations = await getUserConversationsCallable({});
@@ -137,7 +143,6 @@ class Firebase {
 
   };
 
-  // todo: make database rules to ensure user is involved
   subscribeToConversation = ({conversationId, handleSnapshot, handleError}) => {
     let query = this.db.collection('conversations').doc(conversationId);
     return query
@@ -153,40 +158,14 @@ class Firebase {
       })
   };
 
+  markConversationRead = async ({conversationId}) => {
+    const markConversationReadCallable = this.functions.httpsCallable('markConversationRead');
+    return markConversationReadCallable({conversationId});
+  };
+
   checkConversation = async (args) => {
     const checkConversationCallable = this.functions.httpsCallable('checkConversation');
     return checkConversationCallable(args);
-  };
-
-  // withOffer false: we just return the id, true, we get the full offer
-  // todo: not used anymore, delete or sanitize result if used again
-  getConversation = async ({conversationId, withOffer = true}) => {
-    const getConversationCallable = this.functions.httpsCallable('getConversation');
-    const conversationResult = await getConversationCallable({conversationId});
-
-    return new Promise(async (resolve, reject) => {
-      if (conversationResult.error) {
-        return reject(conversationResult);
-      }
-
-      if (!withOffer) {
-        return resolve(conversationResult);
-      }
-
-      const offerResult = await this.getOffer({offerId: conversationResult.data.offer});
-      if (offerResult.error) {
-        console.warn(`Offer with id ${conversationResult.data.offer} for conversation ${conversationId} couldn't be found.`);
-        return resolve(conversationResult);
-      }
-      const conversationWithOffer = {
-        data: {
-          ...conversationResult.data,
-          offer: offerResult,
-        }
-      };
-
-      return resolve(conversationWithOffer);
-    });
   };
 
   postConversation = async (args) => {
@@ -209,7 +188,7 @@ function getFirebaseInstance(app) {
     return firebaseInstance;
   } else if (firebaseInstance) {
     return firebaseInstance
-  } else{
+  } else {
     return null;
   }
 }

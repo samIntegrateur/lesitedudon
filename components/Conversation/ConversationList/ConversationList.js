@@ -3,7 +3,7 @@ import Button from '../../UI/Button/Button';
 import ConversationPreview from '../ConversationPreview/ConversationPreview';
 import classes from './ConversationList.module.css';
 
-const ConversationList = ({conversations}) => {
+const ConversationList = ({username, conversations}) => {
 
   let conversationsDisplay = null;
 
@@ -13,7 +13,8 @@ const ConversationList = ({conversations}) => {
         <ul className={classes.conversationList}>
           {conversations.map(conversation => (
             <li key={conversation.id} className={classes.conversationList__item}>
-              <ConversationPreview conversation={conversation} />
+
+              <ConversationPreview username={username} conversation={conversation} />
             </li>
           ))}
         </ul>
