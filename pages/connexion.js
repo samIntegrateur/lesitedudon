@@ -6,6 +6,7 @@ const Connexion = () => {
   return (
 
     <Layout
+      containerSmall
       title="Connexion - Le site du don"
       description="Connexion - Le site du don">
 

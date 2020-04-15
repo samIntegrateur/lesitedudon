@@ -1,4 +1,4 @@
-import React, {Fragment} from 'react';
+import React from 'react';
 import Header from './Header/Header';
 import Footer from './Footer/Footer';
 import Container from './Container/Container';
@@ -6,8 +6,7 @@ import classes from './Layout.module.css';
 import Head from 'next/head';
 
 const Layout = (props) => (
-  <Fragment>
-
+  <>
     {/*Should I do something with _app.js instead ? */}
     <Head>
       <meta charSet="utf-8" key="charset" />
@@ -18,13 +17,13 @@ const Layout = (props) => (
     <div className={classes.layout}>
       <Header className={classes.layout__item} />
       <main role="main" className={[classes.layout__item, classes.layout__main].join(' ')}>
-        <Container>
+        <Container small={props.containerSmall}>
           {props.children}
         </Container>
       </main>
       <Footer className={classes.layout__item} />
     </div>
-  </Fragment>
+  </>
 );
 
 export default Layout;

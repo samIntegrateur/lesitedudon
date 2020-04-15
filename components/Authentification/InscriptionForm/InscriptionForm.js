@@ -4,6 +4,7 @@ import {updateForm} from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import Input from '../../UI/Input/Input';
+import {API_GEO_BASE_PATH} from '../../../shared/contants';
 
 // todo refactor as it's similar to connexion, use classes ?
 const InscriptionForm = () => {
@@ -12,6 +13,8 @@ const InscriptionForm = () => {
   let errorMessage = null;
 
   const {firebase} = useContext(FirebaseContext);
+
+  const [cities, setCities] = useState([]);
 
   // todo check username unicity
   const [controls, setControls] = useState({
@@ -88,6 +91,18 @@ const InscriptionForm = () => {
       isMounted = false;
     }
   }, []);
+
+  const cityChangeHandler = (event) => {
+    event.persist();
+    if (event.target.value.length > 2) {
+      fetch(`${API_GEO_BASE_PATH}communes?nom=${event.target.value}&boost=population&limit=5`)
+        .then(response => response.json())
+        .then(response => {
+          console.log('response', response);
+          setCities(response);
+        });
+    }
+  };
 
   const inputChangedHandler = (event, controlName) => {
     event.persist();
@@ -201,6 +216,17 @@ const InscriptionForm = () => {
       <h1>Je crée mon compte</h1>
 
       {errorMessage}
+
+      <div className="part">
+        <label>Ville</label><br/>
+        <input type="text" onChange={cityChangeHandler} />
+      </div>
+
+      <select id="communes">
+        {cities.map(city => (
+          <option key={city.code} value={city.code}>{city.nom}</option>
+        ))}
+      </select>
 
       <form onSubmit={submitHandler}>
         {formDisplay}

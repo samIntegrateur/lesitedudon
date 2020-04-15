@@ -58,8 +58,11 @@
   --space-xl: calc(var(--spacer) * 2.5);
 
   --container-width: 1280px;
+  --container-small-width: 40rem;
   --container-padding-x: 2rem;
   --container-padding-y: 2rem;
+  --container-padding-sm-x: 1rem;
+  --container-padding-sm-y: 1.5rem;
 
   --btn-font: var(--main-font);
   --btn-font-size: var(--main-font-size);

@@ -6,6 +6,7 @@ const Inscription = () => {
   return (
 
     <Layout
+      containerSmall
       title="Inscription - Le site du don"
       description="Inscription - Le site du don">
 

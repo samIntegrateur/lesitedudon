@@ -105,11 +105,11 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
             </Button>
           )
       }
-      {
-        error && (
+      {error && (
           <p className="error">{error.message}</p>
         )
       }
+
 
     </form>
   );

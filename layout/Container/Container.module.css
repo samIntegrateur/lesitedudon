@@ -1,6 +1,18 @@
 .container {
-    width: var(--container-width);
-    max-width: 100%;
-    margin: 0 auto;
+  width: var(--container-width);
+  max-width: 100%;
+  margin: 0 auto;
+  padding: var(--container-padding-sm-y) var(--container-padding-sm-x);
+}
+
+@media (--min-width-md) {
+  .container {
     padding: var(--container-padding-y) var(--container-padding-x);
+  }
+}
+
+.containerSmall {
+  width: var(--container-small-width);
+  margin-left: auto;
+  margin-right: auto;
 }
