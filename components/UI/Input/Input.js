@@ -11,7 +11,7 @@ const Input = (props) => {
   }
 
   switch(props.elementType) {
-    case('Input'):
+    case('input'):
       inputElement = <input
         className={classes.formGroup__control}
         {...props.elementConfig}

@@ -1,10 +1,12 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState, useRef, useCallback} from 'react';
 import FirebaseContext from '../../../firebase/context';
 import {updateForm} from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import Input from '../../UI/Input/Input';
 import {API_GEO_BASE_PATH} from '../../../shared/contants';
+import Autocomplete from '../../UI/Autocomplete/Autocomplete';
+import {updateObject} from '../../../shared/utility';
 
 // todo refactor as it's similar to connexion, use classes ?
 const InscriptionForm = () => {
@@ -13,8 +15,6 @@ const InscriptionForm = () => {
   let errorMessage = null;
 
   const {firebase} = useContext(FirebaseContext);
-
-  const [cities, setCities] = useState([]);
 
   // todo check username unicity
   const [controls, setControls] = useState({
@@ -84,6 +84,12 @@ const InscriptionForm = () => {
   const [hasError, setHasError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [searchValue, setSearchValue] = useState({
+    displayValue: '', // The input value
+    completeValue: null, // The complete object
+  });
+  const inputRef = useRef(null);
+
   let isMounted = true;
 
   useEffect(() => {
@@ -92,16 +98,20 @@ const InscriptionForm = () => {
     }
   }, []);
 
-  const cityChangeHandler = (event) => {
-    event.persist();
-    if (event.target.value.length > 2) {
-      fetch(`${API_GEO_BASE_PATH}communes?nom=${event.target.value}&boost=population&limit=5`)
-        .then(response => response.json())
-        .then(response => {
-          console.log('response', response);
-          setCities(response);
-        });
-    }
+  const searchCities = useCallback((search) => {
+    return fetch(`${API_GEO_BASE_PATH}communes?nom=${search}&boost=population&limit=5`)
+      .then(response => response.json())
+      .then(response => {
+        return response;
+      }).catch(e => {
+        console.error(e);
+        return [];
+      })
+  }, []);
+
+  const onUpdateValue = (newValue) => {
+    console.log('onUpdateValue', newValue);
+    setSearchValue(newValue);
   };
 
   const inputChangedHandler = (event, controlName) => {
@@ -219,14 +229,24 @@ const InscriptionForm = () => {
 
       <div className="part">
         <label>Ville</label><br/>
-        <input type="text" onChange={cityChangeHandler} />
+        <input type="text"
+               value={searchValue.displayValue}
+               ref={inputRef}
+               onChange={(e) => {
+                 setSearchValue(updateObject(searchValue, { completeValue: null, displayValue: e.target.value}))
+               }} />
+        <Autocomplete
+          inputRef={inputRef}
+          searchValue={searchValue.displayValue}
+          updateValue={onUpdateValue}
+          apiCallFunction={searchCities}
+          resultKey="code"
+          resultDisplay={{
+            values: ['nom', 'codeDepartement'],
+            separator: ' - '
+          }}
+        />
       </div>
-
-      <select id="communes">
-        {cities.map(city => (
-          <option key={city.code} value={city.code}>{city.nom}</option>
-        ))}
-      </select>
 
       <form onSubmit={submitHandler}>
         {formDisplay}
