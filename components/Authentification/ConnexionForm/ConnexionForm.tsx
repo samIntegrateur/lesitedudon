@@ -1,18 +1,20 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, { ChangeEvent, FormEvent, FunctionComponent, useContext, useEffect, useState } from "react";
 import {updateForm} from '../../../shared/form-utils';
 import Input from '../../UI/Input/Input';
 import Spinner from '../../UI/Spinner/Spinner';
 import Button from '../../UI/Button/Button';
 import FirebaseContext from '../../../firebase/context';
+import { Form } from "../../../shared/types/form";
 
-const ConnexionForm = () => {
+const ConnexionForm: FunctionComponent = () => {
 
-  let formDisplay = null;
-  let errorMessage = null;
+  let formDisplay: JSX.Element | null = null;
+  let errorMessage: JSX.Element | null = null;
 
-  const {firebase} = useContext(FirebaseContext);
+  const context: any = useContext(FirebaseContext);
+  const { firebase } = context;
 
-  const [controls, setControls] = useState({
+  const initialForm: Form = {
     email: {
       elementType: 'input',
       elementConfig: {
@@ -43,12 +45,14 @@ const ConnexionForm = () => {
       valid: false,
       touched: false
     },
-  });
+  };
 
-  const [formIsValid, setFormIsValid] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [hasError, setHasError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [controls, setControls] = useState(initialForm);
+
+  const [formIsValid, setFormIsValid] = useState<boolean>(false);
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<Error|null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   let isMounted = true;
 
@@ -58,8 +62,10 @@ const ConnexionForm = () => {
     }
   }, []);
 
-  const inputChangedHandler = (event, controlName) => {
-    event.persist ? event.persist() : null;
+  const inputChangedHandler = (event: ChangeEvent | CustomEvent, controlName: string) => {
+    if("persist" in event) {
+      event.persist();
+    }
 
     const { updatedForm, updatedFormValidity } = updateForm(
       event, controlName, controls
@@ -69,7 +75,7 @@ const ConnexionForm = () => {
     setFormIsValid(updatedFormValidity);
   };
 
-  const submitHandler = (event) => {
+  const submitHandler = (event: FormEvent) => {
     event.preventDefault();
 
     setIsLoading(true);
@@ -80,7 +86,7 @@ const ConnexionForm = () => {
           setIsLoading(false);
           setIsSuccess(true);
         }
-      }).catch(e => {
+      }).catch((e: Error) => {
        if (isMounted) {
          setIsLoading(false);
          setHasError(e);
@@ -90,7 +96,7 @@ const ConnexionForm = () => {
   };
 
   const formElementArray = [];
-  for (let key in controls) {
+  for (const key in controls) {
     formElementArray.push({
       id: key,
       config: controls[key]
@@ -115,7 +121,7 @@ const ConnexionForm = () => {
               shouldValidate={formElement.config.validation}
               required={formElement.config.validation && formElement.config.validation.required}
               touched={formElement.config.touched}
-              changed={(event) => inputChangedHandler(event, formElement.id)}
+              changed={(event: ChangeEvent | CustomEvent) => inputChangedHandler(event, formElement.id)}
             />
           ))
         }

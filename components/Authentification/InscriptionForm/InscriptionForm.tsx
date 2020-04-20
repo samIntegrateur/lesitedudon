@@ -1,25 +1,26 @@
-import React, {useContext, useEffect, useState, useCallback} from 'react';
+import React, { useContext, useEffect, useState, useCallback, FunctionComponent, ChangeEvent, FormEvent } from "react";
 import FirebaseContext from '../../../firebase/context';
-import {updateForm} from '../../../shared/form-utils';
+import { updateForm } from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import Input from '../../UI/Input/Input';
 import {searchCity} from '../../../shared/geo-api';
+import { Form } from "../../../shared/types/form";
 
 // todo refactor as it's similar to connexion, use classes ?
-const InscriptionForm = () => {
+const InscriptionForm: FunctionComponent = () => {
 
-  let formDisplay = null;
-  let errorMessage = null;
+  let formDisplay: JSX.Element | null = null;
+  let errorMessage: JSX.Element | null = null;
 
-  const {firebase} = useContext(FirebaseContext);
+  const context: any = useContext(FirebaseContext);
+  const { firebase } = context;
 
   const searchCitiesCallback = useCallback((search) => {
     return searchCity(search);
   }, []);
 
-  // todo check username unicity
-  const [controls, setControls] = useState({
+  const initialForm: Form = {
     username: {
       elementType: 'input',
       elementConfig: {
@@ -92,7 +93,7 @@ const InscriptionForm = () => {
       label: 'Ville',
       validation: {
         required: false,
-        geoCityFormat: true,
+        geoCity: true,
       },
       autocomplete: {
         apiCallFunction: searchCitiesCallback,
@@ -104,13 +105,16 @@ const InscriptionForm = () => {
       },
       valid: true,
       touched: false
-    },
-  });
+    }
+  };
 
-  const [formIsValid, setFormIsValid] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [hasError, setHasError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // todo check username unicity
+  const [controls, setControls] = useState<Form>(initialForm);
+
+  const [formIsValid, setFormIsValid] = useState<boolean>(false);
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<Error|null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   let isMounted = true;
 
@@ -120,9 +124,10 @@ const InscriptionForm = () => {
     }
   }, []);
 
-  const inputChangedHandler = (event, controlName) => {
-
-    event.persist ? event.persist() : null;
+  const inputChangedHandler = (event: ChangeEvent | CustomEvent, controlName: string) => {
+    if ('persist' in event) {
+      event.persist();
+    }
 
     const { updatedForm, updatedFormValidity } = updateForm(
       event, controlName, controls
@@ -132,7 +137,7 @@ const InscriptionForm = () => {
     setFormIsValid(updatedFormValidity);
   };
 
-  const submitHandler = (event) => {
+  const submitHandler = (event: FormEvent) => {
     event.preventDefault();
 
     if (controls.password.value === controls.confirmPassword.value) {
@@ -146,7 +151,7 @@ const InscriptionForm = () => {
           setIsLoading(false);
           setIsSuccess(true);
         }
-      }).catch(e => {
+      }).catch((e: Error) => {
         if (isMounted) {
           setIsLoading(false);
           setHasError(e);
@@ -154,13 +159,13 @@ const InscriptionForm = () => {
       });
     } else {
       // todo : this kind of message should be real time
-      const e = { message: 'Les mots de passes ne correspondent pas'};
+      const e = { name: "mismatch", message: 'Les mots de passes ne correspondent pas'};
       setHasError(e);
     }
   };
 
   const formElementArray = [];
-  for (let key in controls) {
+  for (const key in controls) {
     formElementArray.push({
       id: key,
       config: controls[key]
@@ -187,7 +192,7 @@ const InscriptionForm = () => {
               shouldValidate={formElement.config.validation}
               required={formElement.config.validation && formElement.config.validation.required}
               touched={formElement.config.touched}
-              changed={(event) => inputChangedHandler(event, formElement.id)}
+              changed={(event: ChangeEvent | CustomEvent) => inputChangedHandler(event, formElement.id)}
             />
           ))
         }

@@ -46,7 +46,7 @@ export const checkValidity = (value, rules, file = null) => {
       errors.push('Ce champ est obligatoire.');
     }
 
-    if (rules.geoCityFormat && value.displayValue && !value.completeValue) {
+    if (rules.geoCity && value.displayValue && !value.completeValue) {
       errors.push('Vous n\'avez pas sélectionné une ville valide');
     }
   }
