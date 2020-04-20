@@ -58,7 +58,7 @@ const Autocomplete = (props) => {
   }, [inputCurrent, onInputKeyDownHandler]);
 
   useEffect(() => {
-    console.log('searchValue', searchValue);
+    console.log('-----------------searchvalue-----------------', searchValue);
     setResults([]);
 
     if (skipNextChange) {

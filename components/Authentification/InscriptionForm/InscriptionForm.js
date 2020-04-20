@@ -1,12 +1,10 @@
-import React, {useContext, useEffect, useState, useRef, useCallback} from 'react';
+import React, {useContext, useEffect, useState, useCallback} from 'react';
 import FirebaseContext from '../../../firebase/context';
 import {updateForm} from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import Input from '../../UI/Input/Input';
-import {API_GEO_BASE_PATH} from '../../../shared/contants';
-import Autocomplete from '../../UI/Autocomplete/Autocomplete';
-import {updateObject} from '../../../shared/utility';
+import {searchCity} from '../../../shared/geo-api';
 
 // todo refactor as it's similar to connexion, use classes ?
 const InscriptionForm = () => {
@@ -15,6 +13,10 @@ const InscriptionForm = () => {
   let errorMessage = null;
 
   const {firebase} = useContext(FirebaseContext);
+
+  const searchCitiesCallback = useCallback((search) => {
+    return searchCity(search);
+  }, []);
 
   // todo check username unicity
   const [controls, setControls] = useState({
@@ -77,18 +79,38 @@ const InscriptionForm = () => {
       valid: false,
       touched: false
     },
+    city: {
+      elementType: 'input',
+      elementConfig: {
+        type: 'text',
+        autoComplete: 'disabled',
+      },
+      value: {
+        displayValue: '',
+        completeValue: null,
+      },
+      label: 'Ville',
+      validation: {
+        required: false,
+        geoCityFormat: true,
+      },
+      autocomplete: {
+        apiCallFunction: searchCitiesCallback,
+        resultKey: 'code',
+        resultDisplay: {
+          values: ['nom', 'codeDepartement'],
+          separator: ' - '
+        }
+      },
+      valid: true,
+      touched: false
+    },
   });
 
   const [formIsValid, setFormIsValid] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [hasError, setHasError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  const [searchValue, setSearchValue] = useState({
-    displayValue: '', // The input value
-    completeValue: null, // The complete object
-  });
-  const inputRef = useRef(null);
 
   let isMounted = true;
 
@@ -98,24 +120,9 @@ const InscriptionForm = () => {
     }
   }, []);
 
-  const searchCities = useCallback((search) => {
-    return fetch(`${API_GEO_BASE_PATH}communes?nom=${search}&boost=population&limit=5`)
-      .then(response => response.json())
-      .then(response => {
-        return response;
-      }).catch(e => {
-        console.error(e);
-        return [];
-      })
-  }, []);
-
-  const onUpdateValue = (newValue) => {
-    console.log('onUpdateValue', newValue);
-    setSearchValue(newValue);
-  };
-
   const inputChangedHandler = (event, controlName) => {
-    event.persist();
+
+    event.persist ? event.persist() : null;
 
     const { updatedForm, updatedFormValidity } = updateForm(
       event, controlName, controls
@@ -169,12 +176,14 @@ const InscriptionForm = () => {
           formElementArray.map(formElement => (
             <Input
               key={formElement.id}
+              inputKey={formElement.id}
               elementType={formElement.config.elementType}
               elementConfig={formElement.config.elementConfig}
               label={formElement.config.label}
               value={formElement.config.value}
               errors={formElement.config.errors}
               invalid={!formElement.config.valid}
+              autocomplete={formElement.config.autocomplete}
               shouldValidate={formElement.config.validation}
               required={formElement.config.validation && formElement.config.validation.required}
               touched={formElement.config.touched}
@@ -226,27 +235,6 @@ const InscriptionForm = () => {
       <h1>Je crée mon compte</h1>
 
       {errorMessage}
-
-      <div className="part">
-        <label>Ville</label><br/>
-        <input type="text"
-               value={searchValue.displayValue}
-               ref={inputRef}
-               onChange={(e) => {
-                 setSearchValue(updateObject(searchValue, { completeValue: null, displayValue: e.target.value}))
-               }} />
-        <Autocomplete
-          inputRef={inputRef}
-          searchValue={searchValue.displayValue}
-          updateValue={onUpdateValue}
-          apiCallFunction={searchCities}
-          resultKey="code"
-          resultDisplay={{
-            values: ['nom', 'codeDepartement'],
-            separator: ' - '
-          }}
-        />
-      </div>
 
       <form onSubmit={submitHandler}>
         {formDisplay}

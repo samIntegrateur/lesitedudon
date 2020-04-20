@@ -59,7 +59,7 @@ const ConnexionForm = () => {
   }, []);
 
   const inputChangedHandler = (event, controlName) => {
-    event.persist();
+    event.persist ? event.persist() : null;
 
     const { updatedForm, updatedFormValidity } = updateForm(
       event, controlName, controls

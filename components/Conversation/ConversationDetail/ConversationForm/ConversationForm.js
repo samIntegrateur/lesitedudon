@@ -59,7 +59,7 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
   const [controls, setControls] = useState(initialFormState);
 
   const inputChangedHandler = (event, controlName) => {
-    event.persist();
+    event.persist ? event.persist() : null;
 
     if (error || success) {
       onSendMessageClear();

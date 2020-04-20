@@ -104,7 +104,7 @@ const OfferForm = (props) => {
   const [formIsValid, setFormIsValid] = useState(false);
 
   const inputChangedHandler = (event, inputIdentifier) => {
-    event.persist();
+    event.persist ? event.persist() : null;
 
     const { updatedForm, updatedFormValidity } = updateForm(
       event, inputIdentifier, offerForm, fileReader
