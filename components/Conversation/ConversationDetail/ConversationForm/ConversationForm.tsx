@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, { ChangeEvent, FormEvent, FunctionComponent, useContext, useEffect, useRef, useState } from "react";
 import Input from '../../../UI/Input/Input';
 import Button from '../../../UI/Button/Button';
 import {updateForm} from '../../../../shared/form-utils';
@@ -8,12 +8,17 @@ import * as actions from '../../../../store/actions';
 import {connect} from 'react-redux';
 import FirebaseContext from '../../../../firebase/context';
 import {updateObject} from '../../../../shared/utility';
+import { ConversationFormProps } from "./ConversationForm.type";
+import { Form, HTMLFormControlElement } from "../../../../shared/types/form";
 
-const ConversationForm = ({conversationId, startConversation, loading, error, success, onSendMessage, onSendMessageClear}) => {
+const ConversationForm: React.FC<ConversationFormProps> = ({
+    conversationId, startConversation,
+    loading, error, success, onSendMessage, onSendMessageClear
+}) => {
 
-  const messageControlRef = useRef(null);
+  const messageControlRef = useRef<HTMLFormControlElement>(null);
 
-  const initialFormState = {
+  const initialFormState: Form = {
     message: {
       elementType: 'textarea',
       elementConfig: {
@@ -26,8 +31,13 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
       },
       valid: false,
       touched: false,
+      hideErrors: true,
     }
   };
+
+  const [formIsValid, setFormIsValid] = useState(false);
+  const [controls, setControls] = useState(initialFormState);
+
 
   useEffect(() => {
     if (messageControlRef.current) {
@@ -54,12 +64,16 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
     }
   }, [startConversation]);
 
-  const {firebase} = useContext(FirebaseContext);
-  const [formIsValid, setFormIsValid] = useState(false);
-  const [controls, setControls] = useState(initialFormState);
+  const context: any = useContext(FirebaseContext);
+  const { firebase } = context;
 
-  const inputChangedHandler = (event, controlName) => {
-    event.persist ? event.persist() : null;
+  const inputChangedHandler = (
+    event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
+    controlName: string
+  ) => {
+    if("persist" in event) {
+      event.persist();
+    }
 
     if (error || success) {
       onSendMessageClear();
@@ -73,7 +87,7 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
     setFormIsValid(updatedFormValidity);
   };
 
-  const submitHandler = (event) => {
+  const submitHandler = (event: FormEvent) => {
     event.preventDefault();
     onSendMessage(controls.message.value, conversationId, firebase);
     setControls(initialFormState);
@@ -82,16 +96,10 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
   return (
     <form onSubmit={submitHandler}>
       <Input
-        elementType={controls.message.elementType}
-        elementConfig={controls.message.elementConfig}
-        value={controls.message.value}
-        errors={controls.message.errors}
-        invalid={!controls.message.valid}
-        shouldValidate={controls.message.validation}
-        required={controls.message.validation && controls.message.validation.required}
-        touched={controls.message.touched}
-        hideErrors={true}
-        changed={(event) => inputChangedHandler(event, 'message')}
+        config={controls.message}
+        changed={(
+          event: ChangeEvent<HTMLFormControlElement> | CustomEvent
+        ) => inputChangedHandler(event, 'message')}
       />
       {
         loading
@@ -105,7 +113,7 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
             </Button>
           )
       }
-      {error && (
+      {!!error && (
           <p className="error">{error.message}</p>
         )
       }
@@ -115,7 +123,7 @@ const ConversationForm = ({conversationId, startConversation, loading, error, su
   );
 };
 
-
+// todo: replace with useDispatch / useSelector, no hoc with hooks
 const mapStateToProps = state => {
   return {
     loading: state.conversation.apiState.sendMessage.loading,

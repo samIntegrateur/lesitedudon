@@ -1,4 +1,4 @@
-import {API_GEO_BASE_PATH} from './contants';
+import {API_GEO_BASE_PATH} from './constants';
 
 export const searchCity = (search, options = {boost: 'population', limit: 5}) => {
 

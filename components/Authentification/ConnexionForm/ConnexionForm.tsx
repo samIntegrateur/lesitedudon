@@ -1,12 +1,12 @@
-import React, { ChangeEvent, FormEvent, FunctionComponent, useContext, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from "react";
 import {updateForm} from '../../../shared/form-utils';
 import Input from '../../UI/Input/Input';
 import Spinner from '../../UI/Spinner/Spinner';
 import Button from '../../UI/Button/Button';
 import FirebaseContext from '../../../firebase/context';
-import { Form } from "../../../shared/types/form";
+import { Form, HTMLFormControlElement } from "../../../shared/types/form";
 
-const ConnexionForm: FunctionComponent = () => {
+const ConnexionForm: React.FC = () => {
 
   let formDisplay: JSX.Element | null = null;
   let errorMessage: JSX.Element | null = null;
@@ -47,8 +47,7 @@ const ConnexionForm: FunctionComponent = () => {
     },
   };
 
-  const [controls, setControls] = useState(initialForm);
-
+  const [controls, setControls] = useState<Form>(initialForm);
   const [formIsValid, setFormIsValid] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [hasError, setHasError] = useState<Error|null>(null);
@@ -62,8 +61,12 @@ const ConnexionForm: FunctionComponent = () => {
     }
   }, []);
 
-  const inputChangedHandler = (event: ChangeEvent | CustomEvent, controlName: string) => {
-    if("persist" in event) {
+  const inputChangedHandler = (
+    event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
+    controlName: string
+  ) => {
+
+    if('persist' in event) {
       event.persist();
     }
 
@@ -112,16 +115,10 @@ const ConnexionForm: FunctionComponent = () => {
           formElementArray.map(formElement => (
             <Input
               key={formElement.id}
-              elementType={formElement.config.elementType}
-              elementConfig={formElement.config.elementConfig}
-              label={formElement.config.label}
-              value={formElement.config.value}
-              errors={formElement.config.errors}
-              invalid={!formElement.config.valid}
-              shouldValidate={formElement.config.validation}
-              required={formElement.config.validation && formElement.config.validation.required}
-              touched={formElement.config.touched}
-              changed={(event: ChangeEvent | CustomEvent) => inputChangedHandler(event, formElement.id)}
+              config={formElement.config}
+              changed={(
+                event: ChangeEvent<HTMLFormControlElement> | CustomEvent
+              ) => inputChangedHandler(event, formElement.id)}
             />
           ))
         }

@@ -1,4 +1,4 @@
-import { GeoCity } from "./geo";
+import { RefObject } from "react";
 
 export interface Form {
   [key: string]: FormControl;
@@ -6,30 +6,40 @@ export interface Form {
 
 export interface ComplexValue {
   displayValue: '';
-  completeValue: null;
+  completeValue: any;
+}
+
+export interface ElementConfig {
+  type?: string;
+  placeholder?: string;
+  autoComplete?: string;
+  ref?: RefObject<HTMLFormControlElement>;
+  options?: {
+    value: any;
+    displayValue: string;
+  }[];
+}
+
+export interface Autocomplete {
+  apiCallFunction: Function;
+  resultKey: string;
+  resultDisplay: string | {
+    values: string[];
+    separator: string;
+  };
 }
 
 export interface FormControl {
   elementType: string;
   value: string | ComplexValue;
-  elementConfig?: {
-    type?: string;
-    placeholder?: string;
-    autoComplete?: string;
-  };
+  elementConfig?: ElementConfig;
   label?: string;
   validation?: Rules;
   valid?: boolean;
   touched?: boolean;
-  autocomplete?: {
-    apiCallFunction: Function;
-    resultKey: string;
-    resultDisplay: string | {
-      values: string[];
-      separator: string;
-    };
-  };
+  autocomplete?: Autocomplete;
   errors?: string[];
+  hideErrors?: boolean;
 }
 
 export interface Rules {
@@ -39,4 +49,7 @@ export interface Rules {
   isEmail?: boolean;
   fileMaxSize?: number;
   geoCity?: boolean;
+  fileExtension?: string[];
 }
+
+export type HTMLFormControlElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;

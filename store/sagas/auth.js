@@ -1,6 +1,6 @@
 import {put, delay, call} from 'redux-saga/effects';
 import * as actions from '../actions/';
-import {API_AUTH_URL, API_KEY} from '../../shared/contants';
+import {API_AUTH_URL, API_KEY} from '../../shared/constants';
 
 export function* logoutSaga(action) {
   // with call it's easier to test, we can mock it

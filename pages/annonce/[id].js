@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import Layout from '../../layout/Layout';
 import React from 'react';
-import {FIRESTORE_BASE_URL} from '../../shared/contants';
+import {FIRESTORE_BASE_URL} from '../../shared/constants';
 import fetch from 'node-fetch';
 import {getOffersIds, sanitizeOfferFromRest} from '../../shared/sanitize';
 import OfferConversationHandler from '../../components/Offer/OfferConversationHandler/OfferConversationHandler';

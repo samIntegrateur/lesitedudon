@@ -1,7 +1,15 @@
 import {updateObject} from './utility';
+import { ComplexValue, Form, HTMLFormControlElement, Rules } from "./types/form";
+import { REGEX_EMAIL } from "./constants";
+import { ChangeEvent } from "react";
 
-export const checkValidity = (value, rules, file = null) => {
-  const errors = [];
+export const checkValidity = (
+  value: string | ComplexValue,
+  rules: Rules | null,
+  file?: Blob | false,
+): string[] => {
+
+  const errors: string[] = [];
 
   if (!rules) {
     return errors;
@@ -21,8 +29,7 @@ export const checkValidity = (value, rules, file = null) => {
     }
 
     if (rules.isEmail) {
-      const pattern =  /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-      if (!pattern.test(value)) {
+      if (!REGEX_EMAIL.test(value)) {
         errors.push('Ce champ doit contenir une adresse e-mail valide.');
       }
     }
@@ -54,18 +61,38 @@ export const checkValidity = (value, rules, file = null) => {
   return errors;
 };
 
-export const isInputFileAndHasFile = (form, inputIdentifier, files) => {
-  return (
+export const isInputFileAndHasFile = (
+  form: Form, inputIdentifier: string, target: HTMLFormControlElement
+): Blob | false => {
+
+  const config = form[inputIdentifier].elementConfig;
+  if (
     form[inputIdentifier].elementType === 'input' &&
-    form[inputIdentifier].elementConfig.type === 'file' &&
-    files && files.length
-  );
+    config && config.type && config.type === 'file' &&
+    'files' in target
+  ) {
+    target = target as HTMLInputElement;
+    if (target.files && target.files.length) {
+      return target.files[0]
+    }
+  }
+  return false;
 };
 
 // UPDATE FORM
 // to be called on input change
-export const updateForm = (event, inputIdentifier, form, fileReader = null) => {
-  let newValue, isFile, errors;
+export const updateForm = (
+  event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
+  inputIdentifier: string,
+  form: Form,
+  fileReader?: FileReader
+): {
+  updatedForm: Form;
+  updatedFormValidity: boolean;
+} => {
+
+  let newValue;
+  let file: Blob | undefined | false;
   console.log('event', event);
 
   // Handle 2 value types (string or object with displayValue and completeValue)
@@ -73,28 +100,32 @@ export const updateForm = (event, inputIdentifier, form, fileReader = null) => {
   const hasCompleteValue = typeof(form[inputIdentifier].value) !== 'string';
 
   if (event.type === 'change') {
+    event = event as ChangeEvent<HTMLFormControlElement>;
     if (hasCompleteValue) {
       newValue = {
-        displayValue: event.target.value,
+        displayValue: event.target.value || '',
         completeValue: null,
       };
     } else {
       newValue = event.target.value;
     }
-    isFile = fileReader && isInputFileAndHasFile(form, inputIdentifier, event.target.files);
+
+    file = isInputFileAndHasFile(form, inputIdentifier, event.target);
   } else if (event.type === 'completeValueChange') {
+    event = event as CustomEvent;
     newValue = event.detail.value;
   }
   console.log('newValue', newValue);
 
-  if (isFile) {
-    fileReader.readAsDataURL(event.target.files[0]);
+  if (file && fileReader) {
+    file = file as Blob;
+    fileReader.readAsDataURL(file);
   }
 
-  errors = checkValidity(
+  const errors = checkValidity(
     newValue,
-    form[inputIdentifier].validation,
-    isFile ? event.target.files[0] : null
+    form[inputIdentifier].validation || null,
+    file,
   );
 
   const updatedProperties = {
@@ -111,7 +142,7 @@ export const updateForm = (event, inputIdentifier, form, fileReader = null) => {
   });
 
   let updatedFormValidity = true;
-  for (let inputIdentifier in form) {
+  for (const inputIdentifier in form) {
     updatedFormValidity = updatedForm[inputIdentifier].valid && updatedFormValidity;
   }
 

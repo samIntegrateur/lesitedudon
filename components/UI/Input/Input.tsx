@@ -1,70 +1,81 @@
 import React, {useRef, useState, useEffect, useCallback} from 'react';
 import classes from './Input.module.css'
 import Autocomplete from '../Autocomplete/Autocomplete';
+import { ComplexValue } from "../../../shared/types/form";
+import { InputProps } from "./Input.type";
 
-const Input = (props) => {
+const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
+
+  const {
+    elementType,
+    elementConfig,
+    label,
+    value,
+    autocomplete,
+    errors,
+    hideErrors,
+    touched,
+  } = config;
+
+  const invalid = !config.valid;
+  const shouldValidate = config.validation;
+  const required = config.validation && config.validation.required;
 
   let inputElement = null;
   const formGroupClasses = [classes.formGroup];
 
-  if (props.invalid && props.shouldValidate && props.touched && !props.hideErrors) {
+  if (invalid && shouldValidate && touched && !hideErrors) {
     formGroupClasses.push(classes.formGroupIsInvalid);
   }
 
-  const [inputDisplayValue, setInputDisplayValue] = useState('');
-
-  const value = props.value;
+  const [inputDisplayValue, setInputDisplayValue] = useState<string>('');
 
   // Handle 2 value types (string or object with displayValue and completeValue)
-  // todo: better with typescript
   useEffect(() => {
     console.log('value effect', value);
     if (typeof value === 'string') {
       setInputDisplayValue(value);
-    } else if (value.displayValue !== undefined && value.completeValue !== undefined) {
+    } else if ('displayValue' in value && 'completeValue' in value) {
       setInputDisplayValue(value.displayValue);
-    } else {
-      console.error('Input has an incorrect value format');
-      setInputDisplayValue('');
     }
   }, [value]);
 
-  // Create another event type for completeValue
-  const onCompleteValueChange = useCallback((newValue) => {
+  // Create another event type for complexValue
+  const onCompleteValueChange = useCallback((newValue: ComplexValue) => {
     console.log('onCompleteValueChange');
     const event = new CustomEvent('completeValueChange', {
       detail: { value: newValue }
     });
-    props.changed(event);
-  });
+    changed(event);
+  }, []);
 
   // Used for autocomplete
   const inputRef = useRef(null);
 
-  switch(props.elementType) {
+  switch(elementType) {
     case('input'):
       inputElement = <input
         className={classes.formGroup__control}
-        {...props.elementConfig}
+        {...elementConfig}
         value={inputDisplayValue}
-        ref={props.autocomplete ? inputRef : null}
-        onChange={props.changed} />;
+        ref={autocomplete ? inputRef : null}
+        onChange={changed} />;
       break;
     case('textarea'):
       inputElement = <textarea
         className={classes.formGroup__control}
-        {...props.elementConfig}
+        {...elementConfig}
         value={inputDisplayValue}
-        ref={props.autocomplete ? inputRef : null}
-        onChange={props.changed} />;
+        ref={autocomplete ? inputRef : null}
+        onChange={changed} />;
       break;
     case('select'):
       inputElement = (
         <select
           className={classes.formGroup__control}
           value={inputDisplayValue}
-          onChange={props.changed}>
-          {props.elementConfig.options.map(option => (
+          onChange={changed}>
+          {elementConfig && elementConfig.options && elementConfig.options.map(option => (
             <option key={option.value} value={option.value}>
               {option.displayValue}
             </option>
@@ -75,42 +86,42 @@ const Input = (props) => {
     default:
       inputElement = <input
         className={classes.formGroup__control}
-        {...props.elementConfig}
+        {...elementConfig}
         value={inputDisplayValue}
-        ref={props.autocomplete ? inputRef : null}
-        onChange={props.changed} />;
+        ref={autocomplete ? inputRef : null}
+        onChange={changed} />;
   }
 
   return (
     <div className={formGroupClasses.join(' ')}>
       {/*todo add id and for*/}
       {/*todo add helpers like max size and authorized file ext */}
-      {props.label &&
+      {label &&
         <label className={classes.formGroup__label}>
-          {props.label}
-          {!!props.required &&
-          <span>*</span>
+          {label}
+          {required &&
+            <span>*</span>
           }
         </label>
       }
 
       {inputElement}
 
-      {props.autocomplete &&
+      {!!autocomplete &&
         <Autocomplete
           inputRef={inputRef}
           // todo: for now we just handle completeValue, handle simple string
           searchValue={inputDisplayValue}
           updateValue={onCompleteValueChange}
-          apiCallFunction={props.autocomplete.apiCallFunction}
-          resultKey={props.autocomplete.resultKey}
-          resultDisplay={props.autocomplete.resultDisplay}
+          apiCallFunction={autocomplete.apiCallFunction}
+          resultKey={autocomplete.resultKey}
+          resultDisplay={autocomplete.resultDisplay}
         />
       }
 
-      {!!props.errors && !!props.errors.length && !props.hideErrors &&
+      {!!errors && !!errors.length && !hideErrors &&
         <div className="errors">
-          {props.errors.map(error => (
+          {errors.map(error => (
             <p key={error}>
               {error}
             </p>

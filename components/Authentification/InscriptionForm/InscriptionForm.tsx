@@ -5,10 +5,10 @@ import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import Input from '../../UI/Input/Input';
 import {searchCity} from '../../../shared/geo-api';
-import { Form } from "../../../shared/types/form";
+import { Form, HTMLFormControlElement } from "../../../shared/types/form";
 
 // todo refactor as it's similar to connexion, use classes ?
-const InscriptionForm: FunctionComponent = () => {
+const InscriptionForm: React.FC = () => {
 
   let formDisplay: JSX.Element | null = null;
   let errorMessage: JSX.Element | null = null;
@@ -124,7 +124,10 @@ const InscriptionForm: FunctionComponent = () => {
     }
   }, []);
 
-  const inputChangedHandler = (event: ChangeEvent | CustomEvent, controlName: string) => {
+  const inputChangedHandler = (
+    event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
+    controlName: string
+  ) => {
     if ('persist' in event) {
       event.persist();
     }
@@ -181,18 +184,10 @@ const InscriptionForm: FunctionComponent = () => {
           formElementArray.map(formElement => (
             <Input
               key={formElement.id}
-              inputKey={formElement.id}
-              elementType={formElement.config.elementType}
-              elementConfig={formElement.config.elementConfig}
-              label={formElement.config.label}
-              value={formElement.config.value}
-              errors={formElement.config.errors}
-              invalid={!formElement.config.valid}
-              autocomplete={formElement.config.autocomplete}
-              shouldValidate={formElement.config.validation}
-              required={formElement.config.validation && formElement.config.validation.required}
-              touched={formElement.config.touched}
-              changed={(event: ChangeEvent | CustomEvent) => inputChangedHandler(event, formElement.id)}
+              config={formElement.config}
+              changed={(
+                event: ChangeEvent<HTMLFormControlElement> | CustomEvent
+              ) => inputChangedHandler(event, formElement.id)}
             />
           ))
         }

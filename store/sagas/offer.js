@@ -1,6 +1,6 @@
 import * as actions from '../actions';
 import {put, call} from 'redux-saga/effects';
-import {API_BASE_URL} from '../../shared/contants';
+import {API_BASE_URL} from '../../shared/constants';
 import {sanitizeOffersFromRest} from '../../shared/sanitize';
 
 // Todo: handle response, it doesn't always mean a success

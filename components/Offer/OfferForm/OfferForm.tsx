@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from "react";
 import Input from '../../UI/Input/Input';
 import {updateForm} from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
@@ -6,44 +6,27 @@ import Spinner from '../../UI/Spinner/Spinner';
 import * as actions from '../../../store/actions';
 import {connect} from 'react-redux';
 import FirebaseContext from '../../../firebase/context';
+import { OfferFormData, OfferFormProps } from "./OfferForm.type";
+import { Form, HTMLFormControlElement } from "../../../shared/types/form";
 
-let fileReader;
+let fileReader: FileReader;
 // fix for netlify
 // https://www.udemy.com/course/gatsby-js-firebase-hybrid-realtime-static-sites/learn/lecture/16186367#questions
 if (typeof window !== 'undefined') {
   fileReader = new FileReader()
 }
 
-const OfferForm = (props) => {
-  let formDisplay = null;
-
-  const {firebase} = useContext(FirebaseContext);
+const OfferForm: React.FC<OfferFormProps> = (props) => {
   const {loading, error, success, postId, onPostOffer, onPostOfferClear} = props;
-  const [image, setImage] = useState('');
 
-  useEffect(() => {
-    if (fileReader) {
-      fileReader.addEventListener('load', fileReaderLoadHandler);
-    }
+  let formDisplay: JSX.Element | null = null;
 
-    return () => {
-      if (fileReader) {
-        fileReader.removeEventListener('load', fileReaderLoadHandler);
-      }
-    }
-  }, [fileReader]);
+  const context: any = useContext(FirebaseContext);
+  const { firebase } = context;
 
-  const fileReaderLoadHandler = () => {
-    setImage(fileReader.result);
-  };
+  const [image, setImage] = useState<string>('');
 
-  useEffect(() => {
-    return () => {
-      onPostOfferClear();
-    }
-  }, [onPostOfferClear]);
-
-  const [offerForm, setOfferForm] = useState({
+  const initialForm = {
     title: {
       label: 'Titre',
       elementType: 'input',
@@ -99,13 +82,42 @@ const OfferForm = (props) => {
       touched: false,
       errors: [],
     },
-  });
+  };
 
-  const [formIsValid, setFormIsValid] = useState(false);
+  const [offerForm, setOfferForm] = useState<Form>(initialForm);
+  const [formIsValid, setFormIsValid] = useState<boolean>(false);
 
-  const inputChangedHandler = (event, inputIdentifier) => {
-    event.persist ? event.persist() : null;
+  const fileReaderLoadHandler = () => {
+    const result = fileReader.result as string;
+    setImage(result);
+  };
 
+  useEffect(() => {
+    if (fileReader) {
+      fileReader.addEventListener('load', fileReaderLoadHandler);
+    }
+
+    return () => {
+      if (fileReader) {
+        fileReader.removeEventListener('load', fileReaderLoadHandler);
+      }
+    }
+  }, [fileReader]);
+
+  useEffect(() => {
+    return () => {
+      onPostOfferClear();
+    }
+  }, [onPostOfferClear]);
+
+  const inputChangedHandler = (
+    event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
+    inputIdentifier: string
+  ) => {
+
+    if('persist' in event) {
+      event.persist();
+    }
     const { updatedForm, updatedFormValidity } = updateForm(
       event, inputIdentifier, offerForm, fileReader
     );
@@ -114,11 +126,11 @@ const OfferForm = (props) => {
     setFormIsValid(updatedFormValidity);
   };
 
-  const offerSubmitHandler = (event) => {
+  const offerSubmitHandler = (event: FormEvent) => {
     event.preventDefault();
 
-    const formData = {};
-    for (let formElementIdentifier in offerForm) {
+    const formData: OfferFormData = {};
+    for (const formElementIdentifier in offerForm) {
       if (formElementIdentifier === 'image') {
         console.log('image');
         if (image) {
@@ -137,7 +149,7 @@ const OfferForm = (props) => {
 
   // Format offerForm for jsx
   const formElementArray = [];
-  for (let key in offerForm) {
+  for (const key in offerForm) {
     formElementArray.push({
       id: key,
       config: offerForm[key]
@@ -185,16 +197,10 @@ const OfferForm = (props) => {
           {formElementArray.map(formElement => (
             <Input
               key={formElement.id}
-              label={formElement.config.label}
-              elementType={formElement.config.elementType}
-              elementConfig={formElement.config.elementConfig}
-              value={formElement.config.value}
-              errors={formElement.config.errors}
-              invalid={!formElement.config.valid}
-              shouldValidate={formElement.config.validation}
-              required={formElement.config.validation && formElement.config.validation.required}
-              touched={formElement.config.touched}
-              changed={(event) => inputChangedHandler(event, formElement.id)}
+              config={formElement.config}
+              changed={(
+                event: ChangeEvent<HTMLFormControlElement> | CustomEvent
+              ) => inputChangedHandler(event, formElement.id)}
             />
           ))}
 
