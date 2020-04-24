@@ -32,8 +32,8 @@ const Header = () => {
   }
 
   let badgeDisplay;
-  if (user && user.newMessages && user.newMessages > 0) {
-    const title = `Vous avez ${user.newMessages} ${user.newMessages > 1 ? 'nouveaux messages' : 'nouveau message'}`;
+  if (user && user.userProfile && user.userProfile.newMessages && user.userProfile.newMessages > 0) {
+    const title = `Vous avez ${user.userProfile.newMessages} ${user.userProfile.newMessages > 1 ? 'nouveaux messages' : 'nouveau message'}`;
     badgeDisplay = (
       <Badge style="secondary" super title={title}>
         {user.newMessages}

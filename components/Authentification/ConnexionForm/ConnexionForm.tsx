@@ -4,7 +4,7 @@ import Input from '../../UI/Input/Input';
 import Spinner from '../../UI/Spinner/Spinner';
 import Button from '../../UI/Button/Button';
 import FirebaseContext from '../../../firebase/context';
-import { Form, HTMLFormControlElement } from "../../../shared/types/form";
+import { FormType, HTMLFormControlElement } from "../../../shared/types/form.type";
 
 const ConnexionForm: React.FC = () => {
 
@@ -14,7 +14,7 @@ const ConnexionForm: React.FC = () => {
   const context: any = useContext(FirebaseContext);
   const { firebase } = context;
 
-  const initialForm: Form = {
+  const initialForm: FormType = {
     email: {
       elementType: 'input',
       elementConfig: {
@@ -47,7 +47,7 @@ const ConnexionForm: React.FC = () => {
     },
   };
 
-  const [controls, setControls] = useState<Form>(initialForm);
+  const [controls, setControls] = useState<FormType>(initialForm);
   const [formIsValid, setFormIsValid] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [hasError, setHasError] = useState<Error|null>(null);

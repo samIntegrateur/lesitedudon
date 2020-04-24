@@ -1,24 +1,43 @@
-import React, { ChangeEvent, FormEvent, FunctionComponent, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  ChangeEvent,
+  FormEvent,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import Input from '../../../UI/Input/Input';
 import Button from '../../../UI/Button/Button';
 import {updateForm} from '../../../../shared/form-utils';
-import classes from './ConversationForm.module.css';
 import Spinner from '../../../UI/Spinner/Spinner';
-import * as actions from '../../../../store/actions';
-import {connect} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 import FirebaseContext from '../../../../firebase/context';
 import {updateObject} from '../../../../shared/utility';
-import { ConversationFormProps } from "./ConversationForm.type";
-import { Form, HTMLFormControlElement } from "../../../../shared/types/form";
+import { FormType, HTMLFormControlElement } from "../../../../shared/types/form.type";
+import { StoreState } from "../../../../store/types/store.type";
+import { ApiStateItem } from "../../../../store/types/common.type";
+import { sendMessage, sendMessageClear } from "../../../../store/actions";
 
+interface ConversationFormProps {
+  conversationId: string;
+  startConversation: boolean;
+}
 const ConversationForm: React.FC<ConversationFormProps> = ({
     conversationId, startConversation,
-    loading, error, success, onSendMessage, onSendMessageClear
 }) => {
+
+  const { loading, error, success } = useSelector<StoreState, ApiStateItem>(state =>
+    state.conversation.apiState.sendMessage
+  );
+
+  const context = useContext(FirebaseContext);
+  const { firebase } = context;
+
+  const dispatch = useDispatch();
 
   const messageControlRef = useRef<HTMLFormControlElement>(null);
 
-  const initialFormState: Form = {
+  const initialFormState: FormType = {
     message: {
       elementType: 'textarea',
       elementConfig: {
@@ -62,10 +81,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
       setControls(updatedForm);
       setFormIsValid(true);
     }
-  }, [startConversation]);
-
-  const context: any = useContext(FirebaseContext);
-  const { firebase } = context;
+  }, [startConversation, controls]);
 
   const inputChangedHandler = (
     event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
@@ -76,7 +92,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
     }
 
     if (error || success) {
-      onSendMessageClear();
+      dispatch(sendMessageClear());
     }
 
     const { updatedForm, updatedFormValidity } = updateForm(
@@ -89,8 +105,10 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
 
   const submitHandler = (event: FormEvent) => {
     event.preventDefault();
-    onSendMessage(controls.message.value, conversationId, firebase);
-    setControls(initialFormState);
+    if (firebase) {
+      dispatch(sendMessage(controls.message.value as string, conversationId, firebase));
+      setControls(initialFormState);
+    }
   };
 
   return (
@@ -123,20 +141,4 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
   );
 };
 
-// todo: replace with useDispatch / useSelector, no hoc with hooks
-const mapStateToProps = state => {
-  return {
-    loading: state.conversation.apiState.sendMessage.loading,
-    error: state.conversation.apiState.sendMessage.error,
-    success: state.conversation.apiState.sendMessage.success,
-  }
-};
-
-const mapDispatchToProps = dispatch => {
-  return {
-    onSendMessage: (message, conversationId, firebase) => dispatch(actions.sendMessage(message, conversationId, firebase)),
-    onSendMessageClear: () => dispatch(actions.sendMessageClear()),
-  }
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ConversationForm);
+export default ConversationForm;

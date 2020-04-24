@@ -1,5 +1,5 @@
 import {updateObject} from './utility';
-import { ComplexValue, Form, HTMLFormControlElement, Rules } from "./types/form";
+import { ComplexValue, FormType, HTMLFormControlElement, Rules } from "./types/form.type";
 import { REGEX_EMAIL } from "./constants";
 import { ChangeEvent } from "react";
 
@@ -62,7 +62,7 @@ export const checkValidity = (
 };
 
 export const isInputFileAndHasFile = (
-  form: Form, inputIdentifier: string, target: HTMLFormControlElement
+  form: FormType, inputIdentifier: string, target: HTMLFormControlElement
 ): Blob | false => {
 
   const config = form[inputIdentifier].elementConfig;
@@ -84,10 +84,10 @@ export const isInputFileAndHasFile = (
 export const updateForm = (
   event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
   inputIdentifier: string,
-  form: Form,
+  form: FormType,
   fileReader?: FileReader
 ): {
-  updatedForm: Form;
+  updatedForm: FormType;
   updatedFormValidity: boolean;
 } => {
 

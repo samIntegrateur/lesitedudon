@@ -1,12 +1,13 @@
 import * as actions from '../actions';
 import {put, call} from 'redux-saga/effects';
 
-export function* postConversationSaga({conversation, firebase}) {
+export function* postConversationSaga({ conversation, firebase }) {
 
   yield put(actions.postConversationStart());
 
   try {
     const response = yield call(firebase.postConversation, conversation);
+    console.log('response', response);
     // const responseBody = yield response.json();
     if (response.error) {
       yield put(actions.postConversationFail(response.error));

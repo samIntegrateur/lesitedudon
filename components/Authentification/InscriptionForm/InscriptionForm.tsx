@@ -5,7 +5,7 @@ import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import Input from '../../UI/Input/Input';
 import {searchCity} from '../../../shared/geo-api';
-import { Form, HTMLFormControlElement } from "../../../shared/types/form";
+import { FormType, HTMLFormControlElement } from "../../../shared/types/form.type";
 
 // todo refactor as it's similar to connexion, use classes ?
 const InscriptionForm: React.FC = () => {
@@ -20,7 +20,7 @@ const InscriptionForm: React.FC = () => {
     return searchCity(search);
   }, []);
 
-  const initialForm: Form = {
+  const initialForm: FormType = {
     username: {
       elementType: 'input',
       elementConfig: {
@@ -109,7 +109,7 @@ const InscriptionForm: React.FC = () => {
   };
 
   // todo check username unicity
-  const [controls, setControls] = useState<Form>(initialForm);
+  const [controls, setControls] = useState<FormType>(initialForm);
 
   const [formIsValid, setFormIsValid] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);

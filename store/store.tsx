@@ -6,11 +6,12 @@ import thunk from 'redux-thunk';
 import {composeWithDevTools} from 'redux-devtools-extension/developmentOnly';
 import authReducer from './reducers/auth';
 import conversationReducer from './reducers/conversation';
+import { StoreState } from "./types/store.type";
 
 // todo : cleanup
 // a lot of actions aren't used anymore since with use firebase client (with context) instead of rest api
 // Maybe keep a store for post actions ?
-export const makeStore = (initialState, options) => {
+export const makeStore = (initialState?: StoreState) => {
   // 1: Create the middleware
   const sagaMiddleware = createSagaMiddleware();
 
@@ -31,7 +32,7 @@ export const makeStore = (initialState, options) => {
 
   // 2: Add an extra parameter for applying middleware:
   const store = createStore(rootReducer, composeEnhancers(
-    applyMiddleware(thunk, sagaMiddleware)
+   applyMiddleware(thunk, sagaMiddleware)
   ));
 
   // 3: Run your sagas:

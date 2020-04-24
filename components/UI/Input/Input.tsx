@@ -1,7 +1,7 @@
 import React, {useRef, useState, useEffect, useCallback} from 'react';
 import classes from './Input.module.css'
 import Autocomplete from '../Autocomplete/Autocomplete';
-import { ComplexValue } from "../../../shared/types/form";
+import { ComplexValue } from "../../../shared/types/form.type";
 import { InputProps } from "./Input.type";
 
 const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {

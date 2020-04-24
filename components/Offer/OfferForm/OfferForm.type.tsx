@@ -1,4 +1,4 @@
-import { ComplexValue } from "../../../shared/types/form";
+import { ComplexValue } from "../../../shared/types/form.type";
 
 export interface OfferFormProps {
   loading: boolean;

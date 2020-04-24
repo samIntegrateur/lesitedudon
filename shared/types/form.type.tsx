@@ -1,6 +1,6 @@
 import { RefObject } from "react";
 
-export interface Form {
+export interface FormType {
   [key: string]: FormControl;
 }
 

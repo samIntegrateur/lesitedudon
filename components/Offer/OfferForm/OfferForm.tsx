@@ -7,7 +7,7 @@ import * as actions from '../../../store/actions';
 import {connect} from 'react-redux';
 import FirebaseContext from '../../../firebase/context';
 import { OfferFormData, OfferFormProps } from "./OfferForm.type";
-import { Form, HTMLFormControlElement } from "../../../shared/types/form";
+import { FormType, HTMLFormControlElement } from "../../../shared/types/form.type";
 
 let fileReader: FileReader;
 // fix for netlify
@@ -84,7 +84,7 @@ const OfferForm: React.FC<OfferFormProps> = (props) => {
     },
   };
 
-  const [offerForm, setOfferForm] = useState<Form>(initialForm);
+  const [offerForm, setOfferForm] = useState<FormType>(initialForm);
   const [formIsValid, setFormIsValid] = useState<boolean>(false);
 
   const fileReaderLoadHandler = () => {
