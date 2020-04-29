@@ -1,7 +1,7 @@
 import { ApiStateItem } from "./common.type";
 import { Offer } from "../../shared/types/offer.type";
 
-interface PostOfferState extends ApiStateItem {
+export interface PostOfferState extends ApiStateItem {
   postId: string | null;
 }
 

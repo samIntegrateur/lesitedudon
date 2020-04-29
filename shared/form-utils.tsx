@@ -143,7 +143,7 @@ export const updateForm = (
 
   let updatedFormValidity = true;
   for (const inputIdentifier in form) {
-    updatedFormValidity = updatedForm[inputIdentifier].valid && updatedFormValidity;
+    updatedFormValidity = !!updatedForm[inputIdentifier].valid && updatedFormValidity;
   }
 
   return {

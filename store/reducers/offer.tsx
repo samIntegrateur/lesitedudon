@@ -77,27 +77,27 @@ const offerReducer: Reducer<OfferState, OfferAction> = (
 
     case OfferActionTypes.POST_OFFER_START: {
       return updateObject(state, {
-        loading: true,
         apiState: updateApiState(state.apiState, OfferApiState.POST_OFFER, {
           error: null,
           success: false,
+          loading: true,
         })
       });
     }
     case OfferActionTypes.POST_OFFER_SUCCESS: {
       return updateObject(state, {
-        loading: false,
         apiState: updateApiState(state.apiState, OfferApiState.POST_OFFER, {
           success: true,
           postId: action.id,
+          loading: false,
         })
       });
     }
     case OfferActionTypes.POST_OFFER_FAIL: {
       return updateObject(state, {
-        loading: false,
         apiState: updateApiState(state.apiState, OfferApiState.POST_OFFER, {
           error: action.error,
+          loading: false,
         })
       });
     }

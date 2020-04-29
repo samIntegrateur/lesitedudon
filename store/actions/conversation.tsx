@@ -1,16 +1,16 @@
 import {ConversationActionTypes} from './actionTypes';
-import { Conversation, Message } from "../../shared/types/conversation.type";
+import { Conversation, ConversationForCreation, Message } from "../../shared/types/conversation.type";
 import { Action } from "redux";
 import { Firebase } from "../../firebase/firebase";
 
 // POST CONVERSATION
 
 interface PostConversationAction extends Action<ConversationActionTypes.POST_CONVERSATION> {
-  conversation: Conversation;
+  conversation: ConversationForCreation;
   firebase: Firebase;
 }
 export const postConversation = (
-  conversation: Conversation,
+  conversation: ConversationForCreation,
   firebase: Firebase,
 ): PostConversationAction => {
   return {
@@ -116,11 +116,11 @@ export const getConversationClear = (
 // CHECK CONVERSATION
 
 interface CheckConversationAction extends Action<ConversationActionTypes.CHECK_CONVERSATION> {
-  conversation: Conversation;
+  conversation: ConversationForCreation;
   firebase: Firebase;
 }
 export const checkConversation = (
-  conversation: Conversation,
+  conversation: ConversationForCreation,
   firebase: Firebase,
 ): CheckConversationAction => {
   return {

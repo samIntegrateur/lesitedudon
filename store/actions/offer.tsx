@@ -2,6 +2,7 @@ import { Action } from "redux";
 import { OfferActionTypes } from "./actionTypes";
 import { Offer } from "../../shared/types/offer.type";
 import { Firebase } from "../../firebase/firebase";
+import { CustomFormData } from "../../shared/types/form.type";
 
 // FETCH OFFERS
 
@@ -91,11 +92,11 @@ export const fetchOfferFail = (
 // POST OFFER
 
 interface PostOfferAction extends Action<OfferActionTypes.POST_OFFER> {
-  offer: Offer;
+  offer: CustomFormData;
   firebase: Firebase;
 }
 export const postOffer = (
-  offer: Offer,
+  offer: CustomFormData,
   firebase: Firebase
 ): PostOfferAction => {
   return {

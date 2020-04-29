@@ -20,6 +20,8 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
   const invalid = !config.valid;
   const shouldValidate = config.validation;
   const required = config.validation && config.validation.required;
+  // Don't handle input value for file, it can causes issues
+  const isInputFile = elementType === 'input' && elementConfig?.type === 'file';
 
   let inputElement = null;
   const formGroupClasses = [classes.formGroup];
@@ -32,6 +34,9 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
 
   // Handle 2 value types (string or object with displayValue and completeValue)
   useEffect(() => {
+    if (isInputFile) {
+      return;
+    }
     console.log('value effect', value);
     if (typeof value === 'string') {
       setInputDisplayValue(value);
@@ -52,12 +57,17 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
   // Used for autocomplete
   const inputRef = useRef(null);
 
+  const valueProp = isInputFile ? {} : {
+    value: inputDisplayValue,
+  };
+
   switch(elementType) {
     case('input'):
-      inputElement = <input
+      inputElement =
+        <input
         className={classes.formGroup__control}
         {...elementConfig}
-        value={inputDisplayValue}
+        {...valueProp}
         ref={autocomplete ? inputRef : null}
         onChange={changed} />;
       break;
@@ -87,7 +97,7 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
       inputElement = <input
         className={classes.formGroup__control}
         {...elementConfig}
-        value={inputDisplayValue}
+        {...valueProp}
         ref={autocomplete ? inputRef : null}
         onChange={changed} />;
   }

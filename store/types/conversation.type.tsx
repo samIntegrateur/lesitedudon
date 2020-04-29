@@ -1,12 +1,12 @@
 import { Conversation } from "../../shared/types/conversation.type";
 import { ApiStateItem } from "./common.type";
 
-interface PostConversationState extends ApiStateItem {
+export interface PostConversationState extends ApiStateItem {
   newConversationId: string | null;
 }
 
-interface CheckConversationState extends ApiStateItem {
-  hasConversation: boolean | null;
+export interface CheckConversationState extends ApiStateItem {
+  hasConversation: boolean | string | null;
 }
 
 export enum ConversationApiState {

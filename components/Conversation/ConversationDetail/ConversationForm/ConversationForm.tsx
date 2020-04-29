@@ -16,7 +16,8 @@ import {updateObject} from '../../../../shared/utility';
 import { FormType, HTMLFormControlElement } from "../../../../shared/types/form.type";
 import { StoreState } from "../../../../store/types/store.type";
 import { ApiStateItem } from "../../../../store/types/common.type";
-import { sendMessage, sendMessageClear } from "../../../../store/actions";
+import * as actions from "../../../../store/actions";
+import { ConversationApiState } from "../../../../store/types/conversation.type";
 
 interface ConversationFormProps {
   conversationId: string;
@@ -27,11 +28,10 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
 }) => {
 
   const { loading, error, success } = useSelector<StoreState, ApiStateItem>(state =>
-    state.conversation.apiState.sendMessage
+    state.conversation.apiState[ConversationApiState.SEND_MESSAGE]
   );
 
-  const context = useContext(FirebaseContext);
-  const { firebase } = context;
+  const { firebase } = useContext(FirebaseContext);
 
   const dispatch = useDispatch();
 
@@ -92,7 +92,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
     }
 
     if (error || success) {
-      dispatch(sendMessageClear());
+      dispatch(actions.sendMessageClear());
     }
 
     const { updatedForm, updatedFormValidity } = updateForm(
@@ -106,7 +106,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
   const submitHandler = (event: FormEvent) => {
     event.preventDefault();
     if (firebase) {
-      dispatch(sendMessage(controls.message.value as string, conversationId, firebase));
+      dispatch(actions.sendMessage(controls.message.value as string, conversationId, firebase));
       setControls(initialFormState);
     }
   };

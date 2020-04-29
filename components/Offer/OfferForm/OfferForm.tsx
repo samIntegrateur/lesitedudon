@@ -4,10 +4,11 @@ import {updateForm} from '../../../shared/form-utils';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
 import * as actions from '../../../store/actions';
-import {connect} from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 import FirebaseContext from '../../../firebase/context';
-import { OfferFormData, OfferFormProps } from "./OfferForm.type";
-import { FormType, HTMLFormControlElement } from "../../../shared/types/form.type";
+import { CustomFormData, FormType, HTMLFormControlElement } from "../../../shared/types/form.type";
+import { StoreState } from "../../../store/types/store.type";
+import { OfferApiState, PostOfferState } from "../../../store/types/offer.type";
 
 let fileReader: FileReader;
 // fix for netlify
@@ -16,13 +17,17 @@ if (typeof window !== 'undefined') {
   fileReader = new FileReader()
 }
 
-const OfferForm: React.FC<OfferFormProps> = (props) => {
-  const {loading, error, success, postId, onPostOffer, onPostOfferClear} = props;
+const OfferForm: React.FC = () => {
 
   let formDisplay: JSX.Element | null = null;
 
-  const context: any = useContext(FirebaseContext);
-  const { firebase } = context;
+  const { firebase } = useContext(FirebaseContext);
+
+  const { loading, error, success, postId } = useSelector<StoreState, PostOfferState>(state =>
+    state.offer.apiState[OfferApiState.POST_OFFER]
+  );
+
+  const dispatch = useDispatch();
 
   const [image, setImage] = useState<string>('');
 
@@ -97,25 +102,25 @@ const OfferForm: React.FC<OfferFormProps> = (props) => {
       fileReader.addEventListener('load', fileReaderLoadHandler);
     }
 
-    return () => {
+    return (): void => {
       if (fileReader) {
         fileReader.removeEventListener('load', fileReaderLoadHandler);
       }
     }
-  }, [fileReader]);
+  }, []);
 
   useEffect(() => {
-    return () => {
-      onPostOfferClear();
+    return (): void => {
+      dispatch(actions.postOfferClear());
     }
-  }, [onPostOfferClear]);
+  }, [dispatch]);
 
   const inputChangedHandler = (
     event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
     inputIdentifier: string
-  ) => {
+  ): void => {
 
-    if('persist' in event) {
+    if ('persist' in event) {
       event.persist();
     }
     const { updatedForm, updatedFormValidity } = updateForm(
@@ -126,10 +131,10 @@ const OfferForm: React.FC<OfferFormProps> = (props) => {
     setFormIsValid(updatedFormValidity);
   };
 
-  const offerSubmitHandler = (event: FormEvent) => {
+  const offerSubmitHandler = (event: FormEvent): void => {
     event.preventDefault();
 
-    const formData: OfferFormData = {};
+    const formData: CustomFormData = {};
     for (const formElementIdentifier in offerForm) {
       if (formElementIdentifier === 'image') {
         console.log('image');
@@ -144,7 +149,9 @@ const OfferForm: React.FC<OfferFormProps> = (props) => {
 
     console.log('formData', formData);
 
-    onPostOffer(formData, firebase);
+    if (firebase) {
+      dispatch(actions.postOffer(formData, firebase));
+    }
   };
 
   // Format offerForm for jsx
@@ -224,21 +231,4 @@ const OfferForm: React.FC<OfferFormProps> = (props) => {
   return formDisplay;
 };
 
-const mapStateToProps = state => {
-  return {
-    loading: state.offer.loading,
-    error: state.offer.apiState.postOffer.error,
-    success: state.offer.apiState.postOffer.success,
-    postId: state.offer.apiState.postOffer.postId,
-  }
-};
-
-const mapDispatchToProps = dispatch => {
-  return {
-    onPostOffer: (offer, firebase) => dispatch(actions.postOffer(offer, firebase)),
-    onPostOfferClear: () => dispatch(actions.postOfferClear()),
-  }
-};
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(OfferForm);
+export default OfferForm;

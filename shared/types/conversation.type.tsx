@@ -42,3 +42,10 @@ export interface Conversation extends ConversationCommon {
   dateUpdated: Date;
   messages: Message[];
 }
+
+// Args needed for calling cloud function
+export interface ConversationForCreation {
+  offerId: string;
+  askerUserId: string;
+  receiverUserId: string;
+}

@@ -23,6 +23,7 @@ function useAuth() {
 
         setLoading(true);
         unsubscribe = firebaseValidInstance.auth.onAuthStateChanged(userResult => {
+          console.log('userResult', userResult);
           setLoading(true);
           // Here we have auth infos,
           // Now we want to add datas from userProfile
@@ -39,13 +40,18 @@ function useAuth() {
                   firebaseValidInstance.auth.currentUser.getIdTokenResult(true)
                     .then(token => {
                       console.log('userDatas[0]', userDatas[0]);
-                      setUser({
-                        ...userResult,
-                        // custom claims provided in our cloud functions
-                        isAdmin: token.claims.admin,
-                        username: userSnapshot.empty ? null : userSnapshot.docs[0].id,
-                        userProfile: userDatas[0] || null,
-                      });
+
+                      if (userDatas[0] && userSnapshot.docs[0]) {
+                        setUser({
+                          ...userResult,
+                          // custom claims provided in our cloud functions
+                          isAdmin: token.claims.admin,
+                          username: userSnapshot.docs[0].id,
+                          userProfile: userDatas[0],
+                        });
+                      } else {
+                        console.error('An error occured, user profile could not be found');
+                      }
                       setLoading(false);
 
                     }).catch(e => {

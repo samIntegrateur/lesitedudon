@@ -1,6 +1,6 @@
 export interface ApiTimeStamp {
-  seconds?: string;
-  nanoseconds?: string;
-  _seconds?: string;
-  _nanoseconds?: string;
+  seconds?: number;
+  nanoseconds?: number;
+  _seconds?: number;
+  _nanoseconds?: number;
 }

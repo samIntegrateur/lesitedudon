@@ -53,3 +53,9 @@ export interface Rules {
 }
 
 export type HTMLFormControlElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+// Initially made to handle base64 image
+// Maybe use ts built-in FormData instead ?
+export interface CustomFormData {
+  [key: string]: string | ComplexValue;
+}
