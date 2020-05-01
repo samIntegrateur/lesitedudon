@@ -32,9 +32,7 @@ export function* authUserSaga(action) {
       body: JSON.stringify(authData),
       headers: {'Content-Type': 'application/json'}
     });
-    console.log('response', response);
     const responseBody = yield response.json();
-    console.log('response', responseBody);
     if (responseBody.error) {
       yield put(actions.authFail(responseBody.error));
     } else {
@@ -47,7 +45,6 @@ export function* authUserSaga(action) {
     }
 
   } catch(error) {
-    console.log('error', error);
     yield put(actions.authFail(error.response.data.error));
   }
 }

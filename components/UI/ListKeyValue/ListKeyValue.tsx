@@ -1,14 +1,18 @@
 import React from 'react';
 import classes from './ListKeyValue.module.css';
+import { KeyValueType } from "./ListKeyValue.type";
 
-const ListKeyValue = ({data}) => {
+interface ListKeyValueProps {
+  dataList: KeyValueType[];
+}
+const ListKeyValue: React.FC<ListKeyValueProps> = ({dataList}) => {
   return (
     <ul className={classes.listKeyValue}>
       {
-        data.map(item => (
-          <li key={item.label} className={classes.listKeyValue__item}>
+        dataList.map(item => (
+          <li key={item.key} className={classes.listKeyValue__item}>
             <span className={classes.listKeyValue__itemKey}>
-              {item.label}&nbsp;:
+              {item.key}&nbsp;:
             </span>
             <strong className={classes.listKeyValue__itemValue}>
               {item.value}

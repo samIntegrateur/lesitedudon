@@ -36,7 +36,7 @@ const Header = () => {
     const title = `Vous avez ${user.userProfile.newMessages} ${user.userProfile.newMessages > 1 ? 'nouveaux messages' : 'nouveau message'}`;
     badgeDisplay = (
       <Badge style="secondary" super title={title}>
-        {user.newMessages}
+        {user.userProfile.newMessages}
       </Badge>
     );
   }

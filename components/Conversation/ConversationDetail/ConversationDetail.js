@@ -27,7 +27,6 @@ const ConversationDetail = ({id, user, firebase}) => {
       unsubscribe = firebase.subscribeToConversation({
         conversationId: id,
         handleSnapshot: (conversationSnapshot) => {
-          console.log('conversationSnapshot', conversationSnapshot);
           setConvLoading(false);
           handleConversationSnapshot(conversationSnapshot);
         },

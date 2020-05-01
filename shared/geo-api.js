@@ -5,7 +5,6 @@ export const searchCity = (search, options = {boost: 'population', limit: 5}) =>
   let optionsString = '';
 
   if (options) {
-    console.log('options');
     optionsString = Object.keys(options).map(key => {
       return `${encodeURIComponent(key)}=${encodeURIComponent(options[key])}`;
     }).join('&');

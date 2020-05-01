@@ -23,7 +23,6 @@ function useAuth() {
 
         setLoading(true);
         unsubscribe = firebaseValidInstance.auth.onAuthStateChanged(userResult => {
-          console.log('userResult', userResult);
           setLoading(true);
           // Here we have auth infos,
           // Now we want to add datas from userProfile
@@ -35,11 +34,9 @@ function useAuth() {
                 userSnapshot.forEach(doc => {
                   userDatas.push(doc.data() as Profile);
                 });
-                console.log('userDatas', userDatas);
                 if (firebaseValidInstance.auth && firebaseValidInstance.auth.currentUser) {
                   firebaseValidInstance.auth.currentUser.getIdTokenResult(true)
                     .then(token => {
-                      console.log('userDatas[0]', userDatas[0]);
 
                       if (userDatas[0] && userSnapshot.docs[0]) {
                         setUser({

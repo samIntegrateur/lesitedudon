@@ -7,7 +7,6 @@ export function* postConversationSaga({ conversation, firebase }) {
 
   try {
     const response = yield call(firebase.postConversation, conversation);
-    console.log('response', response);
     // const responseBody = yield response.json();
     if (response.error) {
       yield put(actions.postConversationFail(response.error));

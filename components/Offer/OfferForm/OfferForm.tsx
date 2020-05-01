@@ -137,17 +137,13 @@ const OfferForm: React.FC = () => {
     const formData: CustomFormData = {};
     for (const formElementIdentifier in offerForm) {
       if (formElementIdentifier === 'image') {
-        console.log('image');
         if (image) {
-          console.log('image true');
           formData[formElementIdentifier] = image;
         }
       } else {
         formData[formElementIdentifier] = offerForm[formElementIdentifier].value;
       }
     }
-
-    console.log('formData', formData);
 
     if (firebase) {
       dispatch(actions.postOffer(formData, firebase));

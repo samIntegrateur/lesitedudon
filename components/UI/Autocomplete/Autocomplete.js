@@ -34,12 +34,9 @@ const Autocomplete = (props) => {
   let display;
 
   const onInputKeyDownHandler = useCallback((e) => {
-    console.log('onInputKeyDownHandler', e);
-    // console.log('results', results);
     // if we press down, and we have suggestions, move focus
     if (e.key === 'ArrowDown' && results.length && !isSearching && suggestionsRef && suggestionsRef.current) {
       e.preventDefault();
-      console.log('focus');
       suggestionsRef.current.firstChild.focus();
     }
   }, [results, isSearching, suggestionsRef]);
@@ -58,7 +55,6 @@ const Autocomplete = (props) => {
   }, [inputCurrent, onInputKeyDownHandler]);
 
   useEffect(() => {
-    console.log('-----------------searchvalue-----------------', searchValue);
     setResults([]);
 
     if (skipNextChange) {
@@ -72,18 +68,15 @@ const Autocomplete = (props) => {
     if (debouncedSearchTerm) {
       setIsSearching(true);
       apiCallFunction(debouncedSearchTerm).then(response => {
-        console.log('response', response);
         setIsSearching(false);
         setResults(response);
       });
     } else {
-      console.log('set empty result');
       setResults([]);
     }
   }, [debouncedSearchTerm, apiCallFunction]);
 
   const selectSuggestion = (element, fullValue) => {
-    console.log('you have selected', fullValue);
     inputCurrent.value = element.textContent;
 
     // Avoid trigger autocomplete on this change
@@ -100,13 +93,11 @@ const Autocomplete = (props) => {
   const onKeyDownHandler = (e, fullValue) => {
     // enter
     if (e.key === 'Enter') {
-      console.log('enter, todo select current option');
       selectSuggestion(e.target, fullValue);
     }
     // up
     else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      console.log('go up');
       if (e.target.previousElementSibling) {
         e.target.previousElementSibling.focus();
       } else if (inputCurrent) {
@@ -116,7 +107,6 @@ const Autocomplete = (props) => {
     // down
     else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      console.log('go down');
       if (e.target.nextElementSibling) {
         e.target.nextElementSibling.focus();
       }

@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { PropsWithChildren } from "react";
 import classes from './Button.module.css'
 import Link from 'next/link';
+import { UrlObject } from "url";
 
-const Button = (props) => {
+type buttonStyle = 'default' | 'link' | 'primary' | 'secondary';
+type buttonType = 'a' | 'button' | 'submit';
+
+interface ButtonProps {
+  style?: buttonStyle;
+  type: buttonType;
+  disabled?: boolean;
+  clicked?: (event: React.MouseEvent<HTMLElement>) => void;
+  href?: string | UrlObject;
+  as?: string | UrlObject;
+}
+const Button: React.FC<PropsWithChildren<ButtonProps>> = (props) => {
 
   const classList = [classes.btn];
   let buttonElement = null;
@@ -25,15 +37,15 @@ const Button = (props) => {
   }
 
   const argsList = {
-    disabled:props.disabled,
-    onClick:props.clicked,
-    className:classList.join(' ')
+    disabled: props.disabled,
+    onClick: props.clicked,
+    className: classList.join(' ')
   };
 
   switch (props.type) {
     case ('a'):
       buttonElement = (
-        <Link href={props.href ? props.href : '/'} as={props.as ? props.as : null}>
+        <Link href={props.href ? props.href : '/'} as={props.as ? props.as : undefined}>
           <a {...argsList}>
             {props.children}
           </a>
@@ -62,15 +74,7 @@ const Button = (props) => {
       );
   }
 
-  return (
-    buttonElement
-    // <button
-    //   type={props.type}
-    //   disabled={props.disabled}
-    //   onClick={props.clicked}
-    //   className={classList.join(' ')}
-    // >{props.children}</button>
-  );
+  return buttonElement;
 };
 
 export default Button;

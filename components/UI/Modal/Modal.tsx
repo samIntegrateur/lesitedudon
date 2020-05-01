@@ -2,7 +2,13 @@ import React from 'react';
 import classes from './Modal.module.css';
 import Backdrop from '../Backdrop/Backdrop';
 
-const modal = props => {
+// todo: block scroll and handle accessibility
+interface ModalProps {
+  show: boolean;
+  modalClosed?: (event: React.MouseEvent<HTMLElement>) => void;
+  children?: React.ReactNode;
+}
+const modal: React.FC<ModalProps> = props => {
   return (
     <>
       <Backdrop show={props.show} clicked={props.modalClosed} />

@@ -27,14 +27,17 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
     conversationId, startConversation,
 }) => {
 
+  // ------------------ Context ------------------
+  const { firebase } = useContext(FirebaseContext);
+
+  // ------------------ Store ------------------
   const { loading, error, success } = useSelector<StoreState, ApiStateItem>(state =>
     state.conversation.apiState[ConversationApiState.SEND_MESSAGE]
   );
 
-  const { firebase } = useContext(FirebaseContext);
-
   const dispatch = useDispatch();
 
+  // ------------------ Local vars ------------------
   const messageControlRef = useRef<HTMLFormControlElement>(null);
 
   const initialFormState: FormType = {
@@ -54,10 +57,11 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
     }
   };
 
+  // ------------------ State ------------------
   const [formIsValid, setFormIsValid] = useState(false);
   const [controls, setControls] = useState(initialFormState);
 
-
+  // ------------------ Effects ------------------
   useEffect(() => {
     if (messageControlRef.current) {
       messageControlRef.current.focus();
@@ -111,6 +115,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
     }
   };
 
+  // ------------------ Template ------------------
   return (
     <form onSubmit={submitHandler}>
       <Input

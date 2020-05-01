@@ -93,7 +93,6 @@ export const updateForm = (
 
   let newValue;
   let file: Blob | undefined | false;
-  console.log('event', event);
 
   // Handle 2 value types (string or object with displayValue and completeValue)
   // and 2 event types (change and onCompleteValueChange)
@@ -115,7 +114,6 @@ export const updateForm = (
     event = event as CustomEvent;
     newValue = event.detail.value;
   }
-  console.log('newValue', newValue);
 
   if (file && fileReader) {
     file = file as Blob;

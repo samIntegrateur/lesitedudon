@@ -2,15 +2,23 @@ import React, {useContext, useEffect, useState} from 'react';
 import FirebaseContext from '../../../firebase/context';
 import OfferList from '../../Offer/OfferList/OfferList';
 import Spinner from '../../UI/Spinner/Spinner';
+import { Offer } from "../../../shared/types/offer.type";
+import * as firebase from 'firebase';
 
-const Offers = () => {
-  const [offers, setOffers] = useState([]);
-  const {user, firebase} = useContext(FirebaseContext);
-  const [isLoading, setIsLoading] = useState(false);
+const Offers: React.FC = () => {
 
+  // ------------------ Context ------------------
+  const { user, firebase } = useContext(FirebaseContext);
+
+  // ------------------ State ------------------
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // ------------------ Effects ------------------
   // todo : handle errors
   useEffect(() => {
-    let unsubscribe;
+    let unsubscribe: firebase.Unsubscribe;
+
     if (user && user.username && firebase) {
       setIsLoading(true);
       unsubscribe = firebase.subscribeToUserOffers({
@@ -22,7 +30,7 @@ const Offers = () => {
       })
     }
 
-    return () => {
+    return (): void => {
       if(unsubscribe) {
         unsubscribe();
       }

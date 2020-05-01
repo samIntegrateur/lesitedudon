@@ -47,7 +47,6 @@ const OfferConversationHandler: React.FC<OfferConversationHandlerProps> = ({
   const [checkDone, setCheckDone] = useState(false);
 
   const goToConversation = (id: string) => {
-    console.log('goToConversation');
     router.push('/conversation/[id]', `/conversation/${id}`);
   };
 
@@ -79,7 +78,6 @@ const OfferConversationHandler: React.FC<OfferConversationHandlerProps> = ({
   useEffect(() => {
     // Redirect after conversation creation
     if (newConversationId) {
-      console.log('use effect should redirect');
       dispatch(actions.postConversationClear());
 
       goToConversation(newConversationId);

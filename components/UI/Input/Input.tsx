@@ -37,7 +37,6 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
     if (isInputFile) {
       return;
     }
-    console.log('value effect', value);
     if (typeof value === 'string') {
       setInputDisplayValue(value);
     } else if ('displayValue' in value && 'completeValue' in value) {
@@ -47,7 +46,6 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
 
   // Create another event type for complexValue
   const onCompleteValueChange = useCallback((newValue: ComplexValue) => {
-    console.log('onCompleteValueChange');
     const event = new CustomEvent('completeValueChange', {
       detail: { value: newValue }
     });

@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { PropsWithChildren } from "react";
 import classes from './Badge.module.css';
 
-const Badge = (props) => {
+type badgeStyle = 'default' | 'primary' | 'secondary';
+
+interface BadgeProps {
+  style?: badgeStyle;
+  super?: boolean;
+  title?: string;
+}
+const Badge: React.FC<PropsWithChildren<BadgeProps>> = (props) => {
 
   const classList = [classes.badge];
 
@@ -24,7 +31,7 @@ const Badge = (props) => {
   }
 
   return (
-    <span title={props.title}
+    <span title={props.title ? props.title : undefined}
           className={classList.join(' ')}>
       {props.children}
     </span>

@@ -98,7 +98,6 @@ export class Firebase {
     }> => {
 
     let query;
-    console.log('startAfter', startAfter);
 
     if (startAfter) {
       query = this.db.collection('offers')
