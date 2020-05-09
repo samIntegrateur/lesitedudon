@@ -1,9 +1,12 @@
-import React, {useRef, useState, useEffect, useCallback} from 'react';
+import React, { useRef, useState, useEffect, useCallback, ChangeEvent } from "react";
 import classes from './Input.module.css'
 import Autocomplete from '../Autocomplete/Autocomplete';
-import { ComplexValue } from "../../../shared/types/form.type";
-import { InputProps } from "./Input.type";
+import { ComplexValue, FormControl, HTMLFormControlElement } from "../../../shared/types/form.type";
 
+interface InputProps {
+  config: FormControl;
+  changed: ((event: ChangeEvent<HTMLFormControlElement> | CustomEvent) => void);
+}
 const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
 
   const {
@@ -42,7 +45,7 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
     } else if ('displayValue' in value && 'completeValue' in value) {
       setInputDisplayValue(value.displayValue);
     }
-  }, [value]);
+  }, [value, isInputFile]);
 
   // Create another event type for complexValue
   const onCompleteValueChange = useCallback((newValue: ComplexValue) => {
@@ -50,7 +53,7 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
       detail: { value: newValue }
     });
     changed(event);
-  }, []);
+  }, [changed]);
 
   // Used for autocomplete
   const inputRef = useRef(null);
@@ -120,7 +123,7 @@ const Input: React.FC<InputProps> = ({config, changed}: InputProps) => {
           inputRef={inputRef}
           // todo: for now we just handle completeValue, handle simple string
           searchValue={inputDisplayValue}
-          updateValue={onCompleteValueChange}
+          updateValueFunction={onCompleteValueChange}
           apiCallFunction={autocomplete.apiCallFunction}
           resultKey={autocomplete.resultKey}
           resultDisplay={autocomplete.resultDisplay}

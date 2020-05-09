@@ -8,7 +8,7 @@ import { Profile } from "../shared/types/profile.type";
 function useAuth() {
   const [user, setUser] = useState<UserEnhanced | undefined>();
   const [firebase, setFirebase] = useState<Firebase | undefined>();
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     let unsubscribe: firebase.Unsubscribe;
@@ -21,7 +21,6 @@ function useAuth() {
         const firebaseValidInstance = firebaseInstance as Firebase;
         setFirebase(firebaseValidInstance);
 
-        setLoading(true);
         unsubscribe = firebaseValidInstance.auth.onAuthStateChanged(userResult => {
           setLoading(true);
           // Here we have auth infos,
@@ -46,8 +45,6 @@ function useAuth() {
                           username: userSnapshot.docs[0].id,
                           userProfile: userDatas[0],
                         });
-                      } else {
-                        console.error('An error occured, user profile could not be found');
                       }
                       setLoading(false);
 

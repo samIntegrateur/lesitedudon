@@ -5,7 +5,7 @@ export interface FormType {
 }
 
 export interface ComplexValue {
-  displayValue: '';
+  displayValue: string;
   completeValue: any;
 }
 
@@ -20,13 +20,15 @@ export interface ElementConfig {
   }[];
 }
 
+export interface ComplexResultDisplay {
+  values: string[];
+  separator: string;
+}
+
 export interface Autocomplete {
-  apiCallFunction: Function;
+  apiCallFunction: (value: string) => Promise<[]>;
   resultKey: string;
-  resultDisplay: string | {
-    values: string[];
-    separator: string;
-  };
+  resultDisplay: string | ComplexResultDisplay;
 }
 
 export interface FormControl {

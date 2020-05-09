@@ -2,7 +2,7 @@ import React from 'react';
 import Layout from '../layout/Layout';
 import ConnexionForm from '../components/Authentification/ConnexionForm/ConnexionForm';
 
-const Connexion = () => {
+const Connexion: React.FC = () => {
   return (
 
     <Layout

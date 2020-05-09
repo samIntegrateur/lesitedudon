@@ -7,7 +7,7 @@ import Spinner from '../components/UI/Spinner/Spinner';
 
 // "Private" page : if not authenticated, redirect
 // todo: add server side guard : https://sergiodxa.com/articles/redirects-in-next-the-good-way/
-const CreerUneAnnonce = () => {
+const CreerUneAnnonce: React.FC = () => {
   const router = useRouter();
   const {loading, user} = useContext(FirebaseContext);
 
@@ -15,21 +15,21 @@ const CreerUneAnnonce = () => {
     if (!loading && !user) {
       router.replace('/connexion');
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   return (
     <Layout
       title="Créer une annonce - Le site du don"
       description="Créez une nouvelle annonce pour donner gratuitement un objet">
 
-      {loading &&
+      { loading &&
         <Spinner />
       }
 
       { !!user &&
         <div>
           <h1>Créer une annonce</h1>
-          <OfferForm user={user} />
+          <OfferForm />
         </div>
       }
     </Layout>

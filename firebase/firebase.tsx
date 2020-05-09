@@ -146,12 +146,11 @@ export class Firebase {
     const query = this.db.collection('offers').doc(offerId);
     return await query.get()
       .then(snapshot => {
-        let offer;
 
         if (snapshot.exists) {
-          offer = sanitizeOfferFromFirebase(snapshot);
+          return sanitizeOfferFromFirebase(snapshot);
         }
-        return offer;
+        throw new Error('Snapshot empty');
       });
   };
 
@@ -185,7 +184,7 @@ export class Firebase {
     ): Promise< { data: Conversation[]} > => {
 
       const conversationsWithOffer = sanitizedConversations.map(async conversation => {
-        const offerResult = await this.getOffer({offerId: conversation.offer});
+        const offerResult = await this.getOffer({offerId: conversation.offer as string});
         return {
           ...conversation,
           offer: offerResult

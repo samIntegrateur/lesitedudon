@@ -6,11 +6,11 @@ import {FirebaseContext} from '../../firebase';
 import Spinner from '../../components/UI/Spinner/Spinner';
 import Badge from '../../components/UI/Badge/Badge';
 
-const Header = () => {
+const Header: React.FC = () => {
 
   const { user, loading } = useContext(FirebaseContext);
 
-  let display = null;
+  let display;
 
   if (loading) {
     display = (

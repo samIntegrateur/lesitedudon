@@ -1,8 +1,18 @@
 import React from 'react';
 import classes from './OfferPreview.module.css';
 import DateTime from '../../UI/DateTime/DateTime';
+import { Offer } from "../../../shared/types/offer.type";
 
-const OfferPreview = ({offer, small = false}) => {
+interface OfferPreviewProps {
+  offer: Offer;
+  small?: boolean;
+}
+const OfferPreview: React.FC<OfferPreviewProps> = (
+  {
+    offer,
+    small = false,
+  }
+) => {
 
   const imageSrc = offer.thumbUrl || offer.imageUrl || null;
 

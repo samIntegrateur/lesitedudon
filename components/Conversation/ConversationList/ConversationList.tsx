@@ -2,10 +2,20 @@ import React from 'react';
 import Button from '../../UI/Button/Button';
 import ConversationPreview from '../ConversationPreview/ConversationPreview';
 import classes from './ConversationList.module.css';
+import { Conversation } from "../../../shared/types/conversation.type";
 
-const ConversationList = ({username, conversations}) => {
+interface ConversationListProps {
+  username: string;
+  conversations: Conversation[];
+}
+const ConversationList: React.FC<ConversationListProps> = (
+  {
+    username,
+    conversations,
+  }
+) => {
 
-  let conversationsDisplay = null;
+  let conversationsDisplay;
 
   if (conversations) {
     if (conversations.length) {

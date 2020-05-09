@@ -1,6 +1,10 @@
 import React from 'react';
 import classes from './ListKeyValue.module.css';
-import { KeyValueType } from "./ListKeyValue.type";
+
+interface KeyValueType {
+  key: string;
+  value: string | number | Date;
+}
 
 interface ListKeyValueProps {
   dataList: KeyValueType[];

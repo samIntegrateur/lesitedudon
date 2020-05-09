@@ -98,6 +98,7 @@ export const updateForm = (
   // and 2 event types (change and onCompleteValueChange)
   const hasCompleteValue = typeof(form[inputIdentifier].value) !== 'string';
 
+
   if (event.type === 'change') {
     event = event as ChangeEvent<HTMLFormControlElement>;
     if (hasCompleteValue) {

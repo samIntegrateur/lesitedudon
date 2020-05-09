@@ -23,6 +23,7 @@
     "node_modules"
   ],
   "include": [
+    "declarations.d.ts.tsx",
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"

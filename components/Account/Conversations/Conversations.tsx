@@ -50,7 +50,7 @@ const Conversations: React.FC = () => {
         {getConvsError.message ? <p className="error">{getConvsError.message}</p> : null}
       </>
     );
-  } else if (user) {
+  } else if (user && conversations) {
     display = <ConversationList username={user.username} conversations={conversations} />
   }
 

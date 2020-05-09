@@ -3,14 +3,24 @@ import classes from './OfferDetail.module.css';
 import DateTime from '../../UI/DateTime/DateTime';
 import Button from '../../UI/Button/Button';
 import Spinner from '../../UI/Spinner/Spinner';
+import { Offer } from "../../../shared/types/offer.type";
 
-const OfferDetail = (props) => {
+interface OfferDetailProps {
+  offer: Offer;
+  conversationAvailable: boolean;
+  conversationAvailabilityLoading: boolean;
+  sendMessageClicked: (event: React.MouseEvent<HTMLElement>) => void;
+}
+const OfferDetail: React.FC<OfferDetailProps> = (
+  {
+    offer,
+    conversationAvailable,
+    conversationAvailabilityLoading,
+    sendMessageClicked,
+  }
+) => {
 
-  let offerDisplay = null;
-
-  const {
-    offer, conversationAvailable, conversationAvailabilityLoading, sendMessageClicked
-  } = props;
+  let offerDisplay;
 
   if (offer) {
     offerDisplay = (

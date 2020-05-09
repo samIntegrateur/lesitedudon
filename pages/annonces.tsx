@@ -2,7 +2,7 @@ import React from 'react';
 import Layout from '../layout/Layout';
 import OfferListManager from '../components/Offer/OfferListManager/OfferListManager';
 
-const Annonces = (props) => {
+const Annonces: React.FC = () => {
 
   return (
     <Layout

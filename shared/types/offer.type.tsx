@@ -18,3 +18,9 @@ export interface Offer extends OfferCommon {
   dateCreated: Date;
   dateUpdated: Date;
 }
+
+// after parse but before individual sanitize
+export interface OfferWithFields {
+  name: string;
+  fields: OfferFromApi;
+}

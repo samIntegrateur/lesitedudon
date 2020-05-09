@@ -2,10 +2,22 @@ import React, {useEffect, useRef} from 'react';
 import classes from './ConversationFrame.module.css';
 import Spinner from '../../../UI/Spinner/Spinner';
 import DateTime from '../../../UI/DateTime/DateTime';
+import { Message } from "../../../../shared/types/conversation.type";
 
-const ConversationFrame = ({messages, me, loadingMessages}) => {
+interface ConversationFrameProps {
+  messages: Message[];
+  me: string;
+  loadingMessages: boolean;
+}
+const ConversationFrame: React.FC<ConversationFrameProps> = (
+  {
+    messages,
+    me,
+    loadingMessages
+  }
+) => {
 
-  const frameRef = useRef(null);
+  const frameRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (frameRef.current) {

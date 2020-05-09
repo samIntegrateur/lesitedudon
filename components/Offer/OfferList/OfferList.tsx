@@ -3,16 +3,17 @@ import Link from 'next/link';
 import OfferPreview from '../OfferPreview/OfferPreview';
 import classes from './OfferList.module.css';
 import Button from '../../UI/Button/Button';
+import { Offer } from "../../../shared/types/offer.type";
 
-const OfferList = (props) => {
+const OfferList: React.FC<{offers: Offer[]}> = ({offers}) => {
 
-  let offersDisplay = null;
+  let offersDisplay;
 
-  if (props.offers) {
-    if (props.offers.length && props.offers.length > 0) {
+  if (offers) {
+    if (offers.length && offers.length > 0) {
       offersDisplay = (
         <ul className={classes.offerList}>
-          {props.offers.map(offer => (
+          {offers.map(offer => (
             <li key={offer.id} className={classes.offerList__item}>
               <Link href={`/annonce/[id]`} as={`/annonce/${offer.id}`}>
                 <a title="Voir l'annonce" className={classes.offerList__itemLink}>

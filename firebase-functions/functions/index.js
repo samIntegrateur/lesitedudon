@@ -746,7 +746,9 @@ async function getPublicProfileByAuthContext(context, errorIfEmpty = true) {
       'L\'utilisateur n\'a pas pu être trouvé.');
   }
 
-  console.log('user is', user.docs[0].id);
+  if (user.docs[0] && user.docs[0].id) {
+    console.log('user is', user.docs[0].id);
+  }
 
   return user;
 }

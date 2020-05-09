@@ -128,6 +128,7 @@ const InscriptionForm: React.FC = () => {
     event: ChangeEvent<HTMLFormControlElement> | CustomEvent,
     controlName: string
   ) => {
+
     if ('persist' in event) {
       event.persist();
     }

@@ -7,7 +7,7 @@ import Spinner from '../../components/UI/Spinner/Spinner';
 import Button from '../../components/UI/Button/Button';
 
 
-const Index = () => {
+const Index: React.FC = () => {
   const router = useRouter();
   const {loading, user} = useContext(FirebaseContext);
 
@@ -15,7 +15,7 @@ const Index = () => {
     if (!loading && !user) {
       router.replace('/connexion');
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   return (
     <Layout
@@ -31,7 +31,7 @@ const Index = () => {
           <h1>Mon compte</h1>
 
           <div className="part-big">
-            <Button type="a" style="outline-secondary" href='/creer-une-annonce'>
+            <Button type="a" style="secondary" href='/creer-une-annonce'>
               Créer une annonce
             </Button>
           </div>

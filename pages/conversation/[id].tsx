@@ -6,7 +6,7 @@ import FirebaseContext from '../../firebase/context';
 import Spinner from '../../components/UI/Spinner/Spinner';
 
 // do ssr ?
-const Index = (props) => {
+const Index: React.FC = () => {
   const router = useRouter();
   const {loading, user, firebase} = useContext(FirebaseContext);
 
@@ -16,16 +16,16 @@ const Index = (props) => {
     if (!loading && !user) {
       router.replace('/connexion');
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
 
   const dynamicTitle = `Conversation ${id} - Le site du don`;
 
-  let display = null;
+  let display;
 
   if (loading) {
     display = <Spinner />;
-  } else {
+  } else if (typeof(id) === 'string' && user && firebase) {
     display = <ConversationDetail id={id}
                                   user={user}
                                   firebase={firebase} />

@@ -3,7 +3,7 @@ import {format} from 'date-fns';
 
 interface DateTimeProps {
   date: Date;
-  dateFormat: string;
+  dateFormat?: string;
 }
 const DateTime: React.FC<DateTimeProps> = (
   {

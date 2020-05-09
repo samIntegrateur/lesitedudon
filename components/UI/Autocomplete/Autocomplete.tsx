@@ -1,9 +1,22 @@
 import React, {useEffect, useState, useRef, useCallback} from 'react';
 import classes from './Autocomplete.module.css';
-import useDebounce from '../../../hooks/useDebounce';
 import Spinner from '../Spinner/Spinner';
+import {
+  ComplexResultDisplay,
+  ComplexValue,
+  HTMLFormControlElement,
+} from "../../../shared/types/form.type";
+import useDebounce from "../../../hooks/useDebounce";
 
-const Autocomplete = (props) => {
+interface AutocompleteProps {
+  inputRef: React.RefObject<HTMLFormControlElement>;
+  searchValue: string;
+  updateValueFunction: (value: ComplexValue) => void;
+  apiCallFunction: (value: string) => Promise<[]>;
+  resultKey: string;
+  resultDisplay: string | ComplexResultDisplay;
+}
+const Autocomplete: React.FC<AutocompleteProps> = (props) => {
 
   const {
     inputRef, // the input ref which need autocomplete
@@ -12,7 +25,7 @@ const Autocomplete = (props) => {
     // https://stackoverflow.com/questions/55838351/how-do-we-know-when-a-react-ref-current-value-has-changed
     searchValue, // value from the input
 
-    updateValue, // Call a function to update state without retriggering autocomplete
+    updateValueFunction, // Call a function to update state without retriggering autocomplete
 
     apiCallFunction, // a promise function that make the api call and take a search string as a parameter
     resultKey, // the response param to be used as key
@@ -21,33 +34,37 @@ const Autocomplete = (props) => {
     // or an object if compounded { values: ['string',...], separator: 'string'}
   } = props;
 
-  const suggestionsRef = useRef(null);
+  // ------------------ State ------------------
+  const suggestionsRef = useRef<HTMLUListElement>(null);
 
-  const [searchTerm, setSearchTerm] = useState(null);
-  const [results, setResults] = useState([]);
-  const [skipNextChange, setSkipNextChange] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string | null>(null);
+  const [results, setResults] = useState<[]>([]);
+  const [skipNextChange, setSkipNextChange] = useState<boolean>(false);
 
-  const [isSearching, setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
-  let display;
+  const debouncedSearchTerm = useDebounce(searchTerm ? searchTerm : '', 500);
 
   const onInputKeyDownHandler = useCallback((e) => {
     // if we press down, and we have suggestions, move focus
     if (e.key === 'ArrowDown' && results.length && !isSearching && suggestionsRef && suggestionsRef.current) {
       e.preventDefault();
-      suggestionsRef.current.firstChild.focus();
+      const firstResult: HTMLLIElement | null = suggestionsRef.current.firstElementChild as HTMLLIElement;
+
+      if (firstResult) {
+        firstResult.focus();
+      }
     }
   }, [results, isSearching, suggestionsRef]);
 
   const inputCurrent = inputRef.current || null;
 
+  // ------------------ Effects ------------------
   useEffect(() => {
     if (inputCurrent) {
       inputCurrent.addEventListener('keydown', onInputKeyDownHandler);
     }
-    return () => {
+    return (): void => {
       if (inputCurrent) {
         inputCurrent.removeEventListener('keydown', onInputKeyDownHandler);
       }
@@ -62,7 +79,7 @@ const Autocomplete = (props) => {
     } else {
       setSearchTerm(searchValue);
     }
-  }, [searchValue]);
+  }, [searchValue, setSkipNextChange]);
 
   useEffect(() => {
     if (debouncedSearchTerm) {
@@ -76,30 +93,37 @@ const Autocomplete = (props) => {
     }
   }, [debouncedSearchTerm, apiCallFunction]);
 
-  const selectSuggestion = (element, fullValue) => {
-    inputCurrent.value = element.textContent;
+  const selectSuggestion = (element: HTMLLIElement, fullValue: any): void => {
 
-    // Avoid trigger autocomplete on this change
-    setSkipNextChange(true);
+    if (inputCurrent) {
+      inputCurrent.value = element.textContent || '';
 
-    updateValue({
-      displayValue: element.textContent,
-      completeValue: fullValue,
-    });
-    inputCurrent.focus();
-    setResults([]);
+      // Avoid trigger autocomplete on this change
+      setSkipNextChange(true);
+
+      updateValueFunction({
+        displayValue: element.textContent || '',
+        completeValue: fullValue,
+      });
+
+      inputCurrent.focus();
+      setResults([]);
+    }
   };
 
-  const onKeyDownHandler = (e, fullValue) => {
+  const onKeyDownHandler = (e: React.KeyboardEvent<HTMLLIElement>, fullValue: any): void => {
+    const element = e.target as HTMLLIElement;
+
     // enter
     if (e.key === 'Enter') {
-      selectSuggestion(e.target, fullValue);
+      selectSuggestion(element, fullValue);
     }
     // up
     else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (e.target.previousElementSibling) {
-        e.target.previousElementSibling.focus();
+      const prevElement = element.previousElementSibling as HTMLLIElement;
+      if (prevElement) {
+        prevElement.focus();
       } else if (inputCurrent) {
         inputCurrent.focus();
       }
@@ -107,21 +131,22 @@ const Autocomplete = (props) => {
     // down
     else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (e.target.nextElementSibling) {
-        e.target.nextElementSibling.focus();
+      const nextElement = element.nextElementSibling as HTMLLIElement;
+      if (nextElement) {
+        nextElement.focus();
       }
     }
   };
 
-  const handleItemDisplay = (item) => {
+  const handleItemDisplay = (item: any): string => {
     if (typeof resultDisplay === 'string') {
       return item[resultDisplay];
     } else {
       return (
-        resultDisplay.values.reduce((acc, currentValue, index) => {
+        resultDisplay.values.reduce((acc, currentValue, index): string => {
           if (!item[currentValue]) {
             console.error(`Could not handle resultDisplayValue, ${currentValue} is not a valid param for api response`);
-            return;
+            return '';
           }
           if (index === 0) {
             return `${acc}${item[currentValue]}`;
@@ -133,6 +158,10 @@ const Autocomplete = (props) => {
       );
     }
   };
+
+  // ------------------ Template ------------------
+
+  let display;
 
   if (isSearching) {
     display = (
@@ -149,11 +178,15 @@ const Autocomplete = (props) => {
         >
           {results.map(result => (
               <li className={classes.autocomplete__listItem}
-                  tabIndex="0"
+                  tabIndex={0}
                   role="option"
                   key={result[resultKey]}
-                  onClick={(e) => selectSuggestion(e.target, result)}
-                  onKeyDown={(e) => onKeyDownHandler(e, result)}
+                  onClick={(e): void => {
+                    selectSuggestion(e.target as HTMLLIElement, result)
+                  }}
+                  onKeyDown={(e): void => {
+                    onKeyDownHandler(e, result)
+                  }}
               >
                 {handleItemDisplay(result)}
               </li>

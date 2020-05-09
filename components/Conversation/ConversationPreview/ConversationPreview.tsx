@@ -4,10 +4,28 @@ import DateTime from '../../UI/DateTime/DateTime';
 import OfferPreview from '../../Offer/OfferPreview/OfferPreview';
 import Link from 'next/link';
 import Badge from '../../UI/Badge/Badge';
+import { Conversation } from "../../../shared/types/conversation.type";
+import { Offer } from "../../../shared/types/offer.type";
 
-const ConversationPreview = ({username, conversation}) => {
-  const [otherUser, setOtherUser] = useState(null);
-  const [isMyOffer, setIsMyOffer] = useState(null);
+interface ConversationPreviewProps {
+  username: string;
+  conversation: Conversation;
+}
+const ConversationPreview: React.FC<ConversationPreviewProps> = (
+  {
+    username,
+    conversation
+  }
+) => {
+  const [otherUser, setOtherUser] = useState<string | null>(null);
+  const [isMyOffer, setIsMyOffer] = useState<boolean>(false);
+  const [offer, setOffer] = useState<Offer | null>(null);
+
+  useEffect(() => {
+    if (typeof(conversation.offer) !== 'string') {
+      setOffer(conversation.offer);
+    }
+  }, [conversation]);
 
   useEffect(() => {
     if (conversation.askerUser === username) {
@@ -21,7 +39,10 @@ const ConversationPreview = ({username, conversation}) => {
 
 
   let badgeDisplay = null;
+  let offerDisplay = null;
+
   const newMessages = conversation.unreadMessages[username];
+
   if (newMessages > 0) {
     const title = `Vous avez ${newMessages} ${newMessages > 1 ? 'nouveaux messages' : 'nouveau message'}`;
     badgeDisplay = (
@@ -29,6 +50,16 @@ const ConversationPreview = ({username, conversation}) => {
         {conversation.unreadMessages[username]}
       </Badge>
     );
+  }
+
+  if (offer) {
+    offerDisplay = (
+      <Link href={`/annonce/[id]`} as={`/annonce/${offer.id}`}>
+        <a title="Voir l'annonce" className={classes.conversationPreview__offer}>
+          <OfferPreview offer={offer} small />
+        </a>
+      </Link>
+    )
   }
 
   return (
@@ -51,11 +82,7 @@ const ConversationPreview = ({username, conversation}) => {
           </p>
         </a>
       </Link>
-      <Link href={`/annonce/[id]`} as={`/annonce/${conversation.offer.id}`}>
-        <a title="Voir l'annonce" className={classes.conversationPreview__offer}>
-          <OfferPreview offer={conversation.offer} small />
-        </a>
-      </Link>
+      {offerDisplay}
     </article>
   );
 };
