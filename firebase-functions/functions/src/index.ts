@@ -1,12 +1,121 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
+import { ObjectMetadata } from "firebase-functions/lib/providers/storage";
+import { CallableContext } from "firebase-functions/lib/providers/https";
+import { Message, NewOffer } from "./types";
 const mimeTypes = require('mimetypes');
 const mkdirp = require('mkdirp');
 const spawn = require('child-process-promise').spawn;
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
-const isBase64 = require('is-base64');
+// const isBase64 = require('is-base64');
+
+
+
+// utils
+// remove this ? we have ts
+function dataValidator(
+  data: any,
+  validKeys: { [key: string] : string}
+): void {
+  if (Object.keys(data).length !== Object.keys(validKeys).length) {
+    throw new functions.https.HttpsError('invalid-argument',
+      'Le nombre de propriétés est invalide.');
+  } else {
+    for (const key in data) {
+      if (!validKeys[key] || typeof data[key] !== validKeys[key]) {
+        throw new functions.https.HttpsError('invalid-argument',
+          `La propriété "${key}" est invalide.`);
+      }
+    }
+  }
+}
+
+function checkAuthentication(
+  context: CallableContext,
+  adminRequired?: boolean
+): void {
+  if(!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated',
+      'Vous devez être authentifié pour accéder à cette fonctionnalité.');
+    // todo: admin not used and defined yet, if so, extend token type?
+    // } else if (adminRequired && !context.auth.token.admin) {
+    //   throw new functions.https.HttpsError('permission-denied',
+    //     'Vous devez être admin pour accéder à cette fonctionnalité.');
+    // }
+  }
+}
+
+async function getPublicProfileByUserName(
+  username: string,
+  errorIfEmpty = true,
+) {
+  const user = await admin.firestore().collection('publicProfiles').doc(username).get();
+
+  if (errorIfEmpty && !user.exists) {
+    throw new functions.https.HttpsError('not-found',
+      'L\'utilisateur n\'a pas pu être trouvé.');
+  }
+
+  console.log('user is', user.ref.id);
+
+  return user;
+}
+
+async function getPublicProfileByAuthContext(
+  context: CallableContext,
+  errorIfEmpty = true
+) {
+
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated',
+      'Vous devez être authentifié pour accéder à cette fonctionnalité.');
+  }
+
+  const user = await admin.firestore().collection("publicProfiles")
+    .where("userId", "==", context.auth.uid).limit(1).get();
+
+  if (errorIfEmpty && user.empty) {
+    throw new functions.https.HttpsError("not-found",
+      "L'utilisateur n'a pas pu être trouvé.");
+  }
+
+  if (user.docs[0] && user.docs[0].id) {
+    console.log("user is", user.docs[0].id);
+  }
+
+  return user;
+}
+
+async function getConversationById(
+  conversationId: string,
+  errorIfEmpty = true,
+) {
+  const conversation = await admin.firestore().collection('conversations')
+    .doc(conversationId).get();
+
+  if (errorIfEmpty && !conversation.exists) {
+    throw new functions.https.HttpsError('not-found',
+      'La conversation n\'a pas pu être trouvée.');
+  }
+
+
+  return conversation;
+}
+
+// unused ?
+// function getUnreadMessagesLength(
+//   messages,
+//   username
+// ) {
+//   const unreadMessage = messages.filter(message => {
+//     return message.user !== username && !message.isRead;
+//   });
+//   return unreadMessage.length || 0;
+// }
+
+
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -32,7 +141,7 @@ const OPTIMIZED_MAX_WIDTH = 1000;
 
 // Avoid "memory limit exceeded. Function invocation was interrupted."
 // https://firebase.google.com/docs/functions/manage-functions#set_timeout_and_memory_allocation
-const runtimeOpts = {
+const runtimeOpts: functions.RuntimeOptions = {
   timeoutSeconds: 300,
   memory: '1GB'
 };
@@ -53,7 +162,8 @@ admin.initializeApp();
 // IMAGE PROCESS
 // src https://github.com/firebase/functions-samples/blob/master/generate-thumbnail/functions/index.js
 // Optimize image and create a thumb
-exports.imageProcess = enhancedFunctions.storage.object().onFinalize(async (object) => {
+exports.imageProcess = enhancedFunctions.storage.object()
+  .onFinalize(async (object: ObjectMetadata) => {
 
   console.log('checking object', object);
 
@@ -67,24 +177,38 @@ exports.imageProcess = enhancedFunctions.storage.object().onFinalize(async (obje
   const tempLocalDir = path.dirname(tempLocalFile);
   const tempLocalThumbFile = path.join(os.tmpdir(), thumbFilePath);
 
+  if (!contentType) {
+    console.log('Content type not detected');
+    return;
+  }
+
+  if (!filePath) {
+    console.log('FilePath not detected');
+    return;
+  }
+
   // Exit if this is triggered on a file that is not an image.
   if (!contentType.startsWith('image/')) {
-    return console.log('This is not an image.');
+    console.log('This is not an image.');
+    return;
   }
 
   // we want to process only images in offers folder
   if (!filePath.startsWith('offers/')) {
-    return console.log('We are not in offers folder');
+    console.log('We are not in offers folder');
+    return;
   }
 
   // Metadata to avoid loop process
   if (object.metadata && object.metadata.processedByCloudFunction) {
-    return console.log('Image already processed');
+    console.log('Image already processed');
+    return;
   }
 
   // Exit if the image is already a thumbnail.
   if (fileName.startsWith(THUMB_PREFIX)) {
-    return console.log('Already a Thumbnail.');
+    console.log('Already a Thumbnail.');
+    return;
   }
 
   // Cloud Storage files.
@@ -168,10 +292,12 @@ exports.imageProcess = enhancedFunctions.storage.object().onFinalize(async (obje
     .update({
       imageUrl: imageUrl,
       thumbUrl: thumbUrl,
-    }).then((res) => {
-      return console.log('Doc references to images have been updated ', res);
-    }).catch((error) => {
-      return console.log("Error getting document :", error);
+    }).then((res: FirebaseFirestore.WriteResult) => {
+      console.log('Doc references to images have been updated ', res);
+      return;
+    }).catch((error: Error) => {
+      console.log("Error getting document :", error);
+      return;
     });
 
 
@@ -185,54 +311,68 @@ exports.imageProcess = enhancedFunctions.storage.object().onFinalize(async (obje
 // CREATE PUBLIC PROFILE
 
 // At this point, a user has already been created in front, now we create an entry for it in publicProfiles collection
-exports.createPublicProfile = enhancedFunctions.https.onCall(async (data, context) => {
-  checkAuthentication(context);
-  dataValidator(data, {
-    username: 'string'
-  });
+exports.createPublicProfile = enhancedFunctions.https.onCall(
+  async (
+    data: { username: string },
+    context: CallableContext,
+  ) => {
+    checkAuthentication(context);
+    dataValidator(data, {
+      username: 'string'
+    });
 
-  const userProfile = await getPublicProfileByAuthContext(context, false);
+    const userProfile = await getPublicProfileByAuthContext(context, false);
 
-  if (!userProfile.empty){
-    throw new functions.https.HttpsError('already-exists',
-      'L\'utilisateur existe déjà.');
-  }
+    if (!userProfile.empty){
+      throw new functions.https.HttpsError('already-exists',
+        'L\'utilisateur existe déjà.');
+    }
 
-  const publicProfile = await getPublicProfileByUserName(data.username, false);
+    const publicProfile = await getPublicProfileByUserName(data.username, false);
 
-  if (publicProfile.exists) {
-    throw new functions.https.HttpsError('already-exists',
-      'Ce nom d\'utilisateur est déjà pris.');
-  }
+    if (publicProfile.exists) {
+      throw new functions.https.HttpsError('already-exists',
+        'Ce nom d\'utilisateur est déjà pris.');
+    }
 
-  //const user = await admin.auth().getUser(context.auth.uid);
-  // todo If it's an admin, we provide claims
-  // if (user.email === functions.config().accounts.admin) {
-  //   await admin.auth().setCustomUserClaims(context.auth.uid, {admin: true});
-  // }
+    //const user = await admin.auth().getUser(context.auth.uid);
+    // todo If it's an admin, we provide claims
+    // if (user.email === functions.config().accounts.admin) {
+    //   await admin.auth().setCustomUserClaims(context.auth.uid, {admin: true});
+    // }
 
-  const newDate = new Date();
+    const newDate = new Date();
 
-  return new Promise((resolve, reject) => {
-    admin.firestore().collection('publicProfiles').doc(data.username).set({
-      userId: context.auth.uid,
-      dateCreated: newDate,
-      dateUpdated: newDate,
-      offersNumber: 0,
-    }).then((result) => {
-      return resolve(result);
-    }).catch(reject)
-  });
+    return new Promise((resolve, reject) => {
+      admin.firestore().collection('publicProfiles').doc(data.username).set({
+        userId: context.auth?.uid,
+        dateCreated: newDate,
+        dateUpdated: newDate,
+        offersNumber: 0,
+      }).then((result: FirebaseFirestore.WriteResult) => {
+        return resolve(result);
+      }).catch(reject)
+    });
 
 });
 
 // POST OFFER
-exports.postOffer = enhancedFunctions.https.onCall(async (data, context) => {
+interface postOfferDatas {
+  title: string,
+  description: string,
+  image?: string,
+}
+exports.postOffer = enhancedFunctions.https.onCall(
+  async (
+    data: postOfferDatas,
+    context: CallableContext,
+  ) => {
+
   checkAuthentication(context);
 
   console.log('data', data);
 
-  const validKeys = {
+  const validKeys: { [key: string] : string } = {
     title: 'string',
     description: 'string',
   };
@@ -247,7 +387,7 @@ exports.postOffer = enhancedFunctions.https.onCall(async (data, context) => {
 
   const newDate = new Date();
 
-  const newOffer = {
+  const newOffer: NewOffer = {
     author: user.docs[0].ref,
     title: data.title,
     description: data.description,
@@ -272,10 +412,11 @@ exports.postOffer = enhancedFunctions.https.onCall(async (data, context) => {
     //     'L\'image est invalide. Le format base64 est incorrect.');
     // }
 
-    const mimeType = data.image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
+    const mimeTypeMatch = data.image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
+    const mimeType = mimeTypeMatch && mimeTypeMatch[1];
     console.log('mimeType', mimeType);
 
-    if (!IMAGE_EXTENSIONS.includes(mimeType)) {
+    if (!mimeType || !IMAGE_EXTENSIONS.includes(mimeType)) {
       throw new functions.https.HttpsError('invalid-argument',
         'L\'image est invalide. L\'extension n\'est pas autorisée.');
     }
@@ -286,22 +427,32 @@ exports.postOffer = enhancedFunctions.https.onCall(async (data, context) => {
     const filename = `offers/${newOfferId}.${mimeTypes.detectExtension(mimeType)}`;
     const file = admin.storage().bucket().file(filename);
     await file.save(imageBuffer, { contentType: mimeType });
-    const fileUrl = await file.getSignedUrl({ action: 'read', expires: '03-09-2491' }).then(urls => urls[0]);
+    const fileUrl = await file.getSignedUrl({ action: 'read', expires: '03-09-2491' })
+      .then((urls: any) => urls[0]);
     newOffer.imageUrl = fileUrl;
   }
 
   return new Promise((resolve, reject) => {
     newOfferDoc.set(newOffer)
-      .then((result) => {
-      return resolve(newOfferId);
-    }).catch(reject)
+      .then((result: FirebaseFirestore.WriteResult) => {
+        return resolve(newOfferId);
+      }).catch(reject)
   });
 
 });
 
 // CHECK CONVERSATION
 // Return false if it doesn't exists, a conversation id if it does
-exports.checkConversation = enhancedFunctions.https.onCall(async (data, context) => {
+interface checkConversationData {
+  offerId: string,
+  askerUserId: string,
+  receiverUserId: string,
+}
+exports.checkConversation = enhancedFunctions.https.onCall(
+  async (
+    data: checkConversationData,
+    context: CallableContext,
+  ) => {
   checkAuthentication(context);
   const validKeys = {
     offerId: 'string',
@@ -338,7 +489,12 @@ exports.checkConversation = enhancedFunctions.https.onCall(async (data, context)
 // GET CONVERSATION
 // Return a conversation
 // We don't make it in front as we need to ensure the user is one of the usernames
-exports.getConversation = enhancedFunctions.https.onCall(async (data, context) => {
+exports.getConversation = enhancedFunctions.https.onCall(
+  async (
+    data: { conversationId: string },
+    context: CallableContext,
+  ) => {
+
   checkAuthentication(context);
   const validKeys = {
     conversationId: 'string',
@@ -354,6 +510,11 @@ exports.getConversation = enhancedFunctions.https.onCall(async (data, context) =
   const conversation = await getConversationById(data.conversationId);
 
   const conversationData = conversation.data();
+
+  if (!conversationData) {
+    throw new functions.https.HttpsError('not-found',
+      'La conversation n\a pas pu être récupérée.');
+  }
   console.log('conversationData ', conversationData);
 
   if (conversationData.askerUser !== username && conversationData.receiverUser !== username) {
@@ -370,16 +531,22 @@ exports.getConversation = enhancedFunctions.https.onCall(async (data, context) =
 // GET CONVERSATIONS
 // Return a conversation list
 // We don't make it in front as we need to ensure the user is one of the usernames
-exports.getUserConversations = enhancedFunctions.https.onCall(async (data, context) => {
+exports.getUserConversations = enhancedFunctions.https.onCall(
+  async (
+    data,
+    context: CallableContext,
+  ) => {
+
   checkAuthentication(context);
-  const userId = context.auth.uid;
+  const userId = context.auth?.uid;
   console.log('get conversations for userId', userId);
+
   const snapshot = await admin.firestore().collection('conversations')
     .where('users', 'array-contains-any', [userId])
     .orderBy('dateUpdated', 'desc')
     .get();
 
-  return snapshot.docs.map(doc => {
+  return snapshot.docs.map((doc: admin.firestore.DocumentData) => {
     const dataWithId = {
       datas: doc.data(),
       id: doc.id,
@@ -389,7 +556,16 @@ exports.getUserConversations = enhancedFunctions.https.onCall(async (data, conte
 });
 
 // SEND MESSAGE
-exports.sendMessage = enhancedFunctions.https.onCall(async (data, context) => {
+interface sendMessageDatas {
+  message: string;
+  conversationId: string;
+}
+exports.sendMessage = enhancedFunctions.https.onCall(
+  async (
+    data: sendMessageDatas,
+    context: CallableContext,
+  ) => {
+
   checkAuthentication(context);
 
   const validKeys = {
@@ -406,6 +582,12 @@ exports.sendMessage = enhancedFunctions.https.onCall(async (data, context) => {
   const conversation = await getConversationById(data.conversationId);
 
   const conversationData = conversation.data();
+
+    if (!conversationData) {
+      throw new functions.https.HttpsError('not-found',
+        'La conversation n\a pas pu être récupérée.');
+    }
+
   console.log('conversationData ', conversationData);
 
   if (conversationData.askerUser !== username && conversationData.receiverUser !== username) {
@@ -445,10 +627,10 @@ exports.sendMessage = enhancedFunctions.https.onCall(async (data, context) => {
           ...messageList,
           newMessage,
         ]
-      }).then((res) => {
-        console.log('Conversation has been updated ', res);
-        return resolve(true);
-    }).catch((error) => {
+      }).then((res: any) => {
+      console.log('Conversation has been updated ', res);
+      return resolve(true);
+    }).catch((error: Error) => {
       return reject(error);
     });
   });
@@ -470,6 +652,12 @@ exports.markConversationRead = enhancedFunctions.https.onCall(async (data, conte
   const conversation = await getConversationById(data.conversationId);
 
   const conversationData = conversation.data();
+
+  if (!conversationData) {
+    throw new functions.https.HttpsError('not-found',
+      'La conversation n\a pas pu être récupérée.');
+  }
+
   console.log('conversationData ', conversationData);
 
   if (conversationData.askerUser !== username && conversationData.receiverUser !== username) {
@@ -479,7 +667,7 @@ exports.markConversationRead = enhancedFunctions.https.onCall(async (data, conte
 
   return new Promise((resolve, reject) => {
 
-    const newMessageList = conversationData.messages.map(message => {
+    const newMessageList = conversationData.messages.map((message: Message) => {
       if (message.user !== username && !message.isRead) {
         return {
           ...message,
@@ -506,10 +694,10 @@ exports.markConversationRead = enhancedFunctions.https.onCall(async (data, conte
         unreadMessages: newUnreadMessages,
         dateUpdated: newDate,
         messages: newMessageList,
-      }).then((res) => {
+      }).then((res: any) => {
       console.log('Conversation has been updated ', res);
       return resolve(true);
-    }).catch((error) => {
+    }).catch((error: Error) => {
       return reject(error);
     });
   });
@@ -518,21 +706,25 @@ exports.markConversationRead = enhancedFunctions.https.onCall(async (data, conte
 // UPDATE PROFILE NEW MESSAGES
 exports.updateProfileNewMessages = enhancedFunctions.firestore
   .document('conversations/{conversationId}')
-  .onUpdate(async (change, context) => {
+  .onUpdate(
+    async (
+      change,
+      context,
+    ) => {
     console.log('A conversation has been updated');
     const previousValue = change.before.data();
     const newValue = change.after.data();
 
-    const askerUserName = previousValue.askerUser;
-    const receiverUserName = previousValue.receiverUser;
+    const askerUserName = previousValue?.askerUser;
+    const receiverUserName = previousValue?.receiverUser;
 
-    const previousAskerUnreadMessages = previousValue.unreadMessages[askerUserName];
-    const newAskerUnreadMessages = newValue.unreadMessages[askerUserName];
+    const previousAskerUnreadMessages = previousValue?.unreadMessages[askerUserName];
+    const newAskerUnreadMessages = newValue?.unreadMessages[askerUserName];
     console.log('previousAskerUnreadMessages', previousAskerUnreadMessages);
     console.log('newAskerUnreadMessages', newAskerUnreadMessages);
 
-    const previousReceiverUnreadMessages = previousValue.unreadMessages[askerUserName];
-    const newReceiverUnreadMessages = newValue.unreadMessages[receiverUserName];
+    const previousReceiverUnreadMessages = previousValue?.unreadMessages[askerUserName];
+    const newReceiverUnreadMessages = newValue?.unreadMessages[receiverUserName];
     console.log('previousReceiverUnreadMessages', previousReceiverUnreadMessages);
     console.log('newReceiverUnreadMessages', newReceiverUnreadMessages);
 
@@ -547,15 +739,23 @@ exports.updateProfileNewMessages = enhancedFunctions.firestore
       difference = newReceiverUnreadMessages - previousReceiverUnreadMessages;
       userToUpdate = receiverUserName;
     } else {
-      return console.log('No new unread message.');
+      console.log('No new unread message.');
+      return;
     }
 
     if (!difference || typeof difference !== 'number') {
-      return console.error('Something wrong happened, difference is not correct', difference);
+      console.error('Something wrong happened, difference is not correct', difference);
+      return;
     }
 
     const user = await getPublicProfileByUserName(userToUpdate);
     const userData = user.data();
+
+    if (!userData) {
+      throw new functions.https.HttpsError('not-found',
+        'L\'utilisateur n\'a pas pu être récupéré.');
+    }
+
     console.log('userData', userData);
     const previousMessageCount = userData.newMessages || 0;
 
@@ -565,7 +765,7 @@ exports.updateProfileNewMessages = enhancedFunctions.firestore
     return new Promise((resolve, reject) => {
       user.ref.update({
         newMessages: newMessageCount,
-      }).then((res) => {
+      }).then((res: any) => {
         console.log('newMessage count has been set to ', newMessageCount, ' for user ', user.id);
         return resolve(res);
       }).catch(reject)
@@ -577,7 +777,16 @@ exports.updateProfileNewMessages = enhancedFunctions.firestore
 // Create a new conversation between 2 users concerning an offer from one of them
 // askerUser is the user interested by the offer and want to contact the author
 // receiverUser is the offer author
-exports.postConversation = enhancedFunctions.https.onCall(async (data, context) => {
+interface postConversationDatas {
+  offerId: string;
+  askerUserId: string;
+  receiverUserId: string;
+}
+exports.postConversation = enhancedFunctions.https.onCall(
+  async (
+    data: postConversationDatas,
+    context: CallableContext,
+  ) => {
 
   checkAuthentication(context);
   const validKeys = {
@@ -612,7 +821,7 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
 
   const offer = await admin.firestore().collection('offers').doc(data.offerId).get();
 
-  if (offer.empty) {
+  if (!offer.exists) {
     throw new functions.https.HttpsError('not-found',
       'L\'offre concernée n\'a pas pu être trouvée.');
   }
@@ -642,6 +851,11 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
     const askerUserData = askerUser.data();
     const receiverUserData = receiverUser.data();
 
+    if (!askerUserData || !receiverUserData) {
+      throw new functions.https.HttpsError('not-found',
+        'Les données des utilisateurs n\'ont pas pu être récupérées.');
+    }
+
     // nb, users array is more convenient for queries (see subscribeToUserConversations)
     // and userId better for security rules
     newConversationDoc.set({
@@ -656,7 +870,7 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
       dateCreated: newDate,
       dateUpdated: newDate,
       messages: [],
-    }).then((result) => {
+    }).then((result: FirebaseFirestore.WriteResult) => {
       console.log('New conversation ', result);
       return resolve(newConversationDocId);
     }).catch(reject)
@@ -669,6 +883,10 @@ exports.postConversation = enhancedFunctions.https.onCall(async (data, context) 
 exports.incrementUserOffers = enhancedFunctions.firestore.document('offers/{offerId}')
   .onCreate(async (snap, context) => {
     const newOffer = snap.data();
+    if (!newOffer) {
+      console.log('New offer is not valid, we could not incrementUserOffers');
+      return;
+    }
     console.log('New offer has been created : ', newOffer);
 
     console.log('We want to increment offersNumber for the user : ', newOffer.author.id);
@@ -679,95 +897,23 @@ exports.incrementUserOffers = enhancedFunctions.firestore.document('offers/{offe
     const user = await getPublicProfileByUserName(newOffer.author.id);
 
     const userData = user.data();
+
+    if (!userData) {
+      throw new functions.https.HttpsError('not-found',
+        'Les données de l\'utilisateur n\'ont pas pu être récupérées.');
+    }
+
     console.log('userData', userData);
-    let previousOffersNumber = userData.offersNumber;
+    const previousOffersNumber = userData.offersNumber;
     console.log('Previous OffersNumber', previousOffersNumber);
     const newValue = previousOffersNumber + 1;
 
     return new Promise((resolve, reject) => {
       user.ref.update({
         offersNumber: newValue,
-      }).then((res) => {
+      }).then((res: any) => {
         console.log('Offers number as been incremented to ', newValue);
         return resolve(res);
       }).catch(reject)
     });
   });
-
-
-
-// -----------------------------
-// UTILS
-// -----------------------------
-
-function dataValidator(data, validKeys) {
-  if (Object.keys(data).length !== Object.keys(validKeys).length) {
-    throw new functions.https.HttpsError('invalid-argument',
-      'Le nombre de propriétés est invalide.');
-  } else {
-    for (let key in data) {
-      if (!validKeys[key] || typeof data[key] !== validKeys[key]) {
-        throw new functions.https.HttpsError('invalid-argument',
-          `La propriété "${key}" est invalide.`);
-      }
-    }
-  }
-}
-
-function checkAuthentication(context, adminRequired) {
-  if(!context.auth){
-    throw new functions.https.HttpsError('unauthenticated',
-      'Vous devez être authentifié pour accéder à cette fonctionnalité.');
-  } else if (adminRequired && !context.auth.token.admin) {
-    throw new functions.https.HttpsError('permission-denied',
-      'Vous devez être admin pour accéder à cette fonctionnalité.');
-  }
-}
-
-async function getPublicProfileByUserName(username, errorIfEmpty = true) {
-  const user = await admin.firestore().collection('publicProfiles').doc(username).get();
-
-  if (errorIfEmpty && user.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'L\'utilisateur n\'a pas pu être trouvé.');
-  }
-
-  console.log('user is', user.ref.id);
-
-  return user;
-}
-
-async function getPublicProfileByAuthContext(context, errorIfEmpty = true) {
-  const user = await admin.firestore().collection('publicProfiles')
-    .where('userId', '==', context.auth.uid).limit(1).get();
-
-  if (errorIfEmpty && user.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'L\'utilisateur n\'a pas pu être trouvé.');
-  }
-
-  if (user.docs[0] && user.docs[0].id) {
-    console.log('user is', user.docs[0].id);
-  }
-
-  return user;
-}
-
-async function getConversationById(conversationId, errorIfEmpty = true) {
-  const conversation = await admin.firestore().collection('conversations').doc(conversationId).get();
-
-  if (errorIfEmpty && conversation.empty) {
-    throw new functions.https.HttpsError('not-found',
-      'La conversation n\'a pas pu être trouvée.');
-  }
-
-
-  return conversation;
-}
-
-function getUnreadMessagesLength(messages, username) {
-  const unreadMessage = messages.filter(message => {
-    return message.user !== username && !message.isRead;
-  });
-  return unreadMessage.length || 0;
-}
