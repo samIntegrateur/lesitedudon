@@ -2,9 +2,9 @@
 // There are differences between what api rest returns and what firebase functions does
 import FireStoreParser from 'firestore-parser';
 import {convertUnixTime} from './utility';
-import { Offer } from "./types/offer.type";
+import { Offer, OfferFromApi } from "./types/offer.type";
 import firebase from "firebase";
-import { Conversation } from "./types/conversation.type";
+import { Conversation, ConversationDataFromApi, MessageFromApi } from "./types/conversation.type";
 
 // ex get 123 from "lorem/ipsum/123";
 export const extractIdFromPath = (path: string): string => {
@@ -37,7 +37,6 @@ export const sanitizeOfferFromRest = (offer: any, parse = true): Offer => {
 
 // todo : specifify incoming type (cf: https://www.npmjs.com/package/firestore-parser)
 export const sanitizeOffersFromRest = (data: any): Offer[] => {
-  console.log('data', data);
 
   const parsedData = FireStoreParser(data);
 
@@ -51,14 +50,25 @@ export const sanitizeOffersFromRest = (data: any): Offer[] => {
 };
 
 export const sanitizeOfferFromFirebase = (
-  offer: firebase.firestore.DocumentData,
+  offer: firebase.firestore.DocumentData | OfferFromApi,
+  isSnapshot = true,
 ): Offer => {
-  const itemData = offer.data();
+
+  let itemData;
+
+  if (isSnapshot) {
+    offer = offer as firebase.firestore.DocumentData;
+    itemData = offer.data();
+  } else {
+    offer = offer as OfferFromApi;
+    itemData = offer;
+  }
+
   return {
     ...itemData,
     id: offer.id,
     // Here we receive the whole author reference, but we just want the id
-    author: itemData.author.id,
+    author: itemData.author.id || itemData.author.username,
     // Convert date timestamp
     dateCreated: convertUnixTime(itemData.dateCreated),
     dateUpdated: convertUnixTime(itemData.dateUpdated),
@@ -81,20 +91,40 @@ export const sanitizeOffersFromFirebase = (
   return offers;
 };
 
-// todo: specify type (either firebase.firestore.QuerySnapshot or "dataWithId")
 export const sanitizeConversationFromFirebase = (
-  conversation: any,
+  conversation: firebase.firestore.DocumentData | ConversationDataFromApi,
   isSnapshot = true,
+  skipOffer = false,
 ): Conversation => {
-  const itemData = isSnapshot ? conversation.data() : conversation.datas;
 
+  let itemData, offer;
+
+  if (isSnapshot) {
+    conversation = conversation as firebase.firestore.DocumentData;
+    itemData = conversation.data();
+  } else {
+    conversation = conversation as ConversationDataFromApi;
+    itemData = conversation.datas;
+  }
+
+  // nb: conversation.data() will not get data for the offer reference (ex: subscribeToConversation)
+  // Sadly firestore doesn't seem to have a "populate" reference option
+  // so in this case we use skipOffer to get only the id and call the offer separately
+  if (skipOffer) {
+    offer = itemData.offer.id;
+  } else {
+    offer = sanitizeOfferFromFirebase(itemData.offer, false);
+  }
+
+  console.log('conversation itemData', itemData);
   return {
     ...itemData,
     id: conversation.id,
+    offer: offer,
     dateCreated: convertUnixTime(itemData.dateCreated),
     dateUpdated: convertUnixTime(itemData.dateUpdated),
     messages:  itemData.messages
-      ? itemData.messages.map((message: any) => {
+      ? itemData.messages.map((message: MessageFromApi) => {
         return {
           ...message,
           timestamp: convertUnixTime(message.timestamp)
@@ -104,17 +134,26 @@ export const sanitizeConversationFromFirebase = (
   }
 };
 
+// Snapshot is what we get from a "direct call"
+// The other is what we return from custom could function
 export const sanitizeConversationsFromFirebase = (
-  datas: any,
+  datas: firebase.firestore.DocumentData | ConversationDataFromApi[],
   isSnapshot = true
 ): Conversation[] => {
   const conversations: Conversation[] = [];
-  if (isSnapshot && datas.empty) {
-    return conversations;
+
+  if (isSnapshot) {
+    datas = datas as firebase.firestore.DocumentData;
+    if (datas.empty) {
+      return conversations;
+    }
+  } else {
+    datas = datas as ConversationDataFromApi;
   }
 
-  datas.forEach((doc: any) => {
+  datas.forEach((doc: firebase.firestore.DocumentData | ConversationDataFromApi) => {
     conversations.push(sanitizeConversationFromFirebase(doc, isSnapshot));
   });
+  console.log('conversations', conversations);
   return conversations;
 };

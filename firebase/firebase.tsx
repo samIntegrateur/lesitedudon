@@ -167,36 +167,14 @@ export class Firebase {
     return postOfferCallable(datas);
   };
 
-  // can be slow, get offers in a second time with local loader ? or in BE ?
-  // in both case we can have multiple references for the same (if we created an offer) so avoid getting it multiple times
-  getUserConversations = async ({withOffer = true}: {
-    withOffer: boolean;
-  }): Promise<{ data: Conversation[] }> => {
+  getUserConversations = async (): Promise<{ data: Conversation[] }> => {
+
     const getUserConversationsCallable = this.functions.httpsCallable('getUserConversations');
     const conversations = await getUserConversationsCallable({});
+    console.log('conversations', conversations);
     const sanitizedConversations = sanitizeConversationsFromFirebase(conversations.data, false);
 
-    if (!withOffer) {
-      return {data: sanitizedConversations};
-    }
-
-    const mapLoop = async (
-    ): Promise< { data: Conversation[]} > => {
-
-      const conversationsWithOffer = sanitizedConversations.map(async conversation => {
-        const offerResult = await this.getOffer({offerId: conversation.offer as string});
-        return {
-          ...conversation,
-          offer: offerResult
-        }
-      });
-
-      const result = await Promise.all(conversationsWithOffer);
-      return {data: result};
-    };
-
-    return mapLoop();
-
+    return {data: sanitizedConversations};
   };
 
   subscribeToConversation = ({conversationId, handleSnapshot, handleError}: {
@@ -204,14 +182,13 @@ export class Firebase {
     handleSnapshot: (snapshot: Conversation) => void;
     handleError: (error: Error) => void;
   }): () => void => {
-
     const query = this.db.collection('conversations').doc(conversationId);
     return query
       .onSnapshot(snap => {
         if (!snap.exists) {
           handleError({name: 'not-founded', message: 'La conversation est introuvable.'});
         } else {
-          const conversation = sanitizeConversationFromFirebase(snap);
+          const conversation = sanitizeConversationFromFirebase(snap, true, true);
           handleSnapshot(conversation);
         }
       }, (error) => {

@@ -1,7 +1,9 @@
 import { ApiTimeStamp } from "./dates.type";
+import { Profile } from "./profile.type";
 
 export interface OfferCommon {
-  author: string;
+  id?: string;
+  author: string | Profile;
   title: string;
   description: string;
   imageUrl?: string;

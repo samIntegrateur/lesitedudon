@@ -530,7 +530,6 @@ exports.getConversation = enhancedFunctions.https.onCall(
 
 // GET CONVERSATIONS
 // Return a conversation list
-// We don't make it in front as we need to ensure the user is one of the usernames
 exports.getUserConversations = enhancedFunctions.https.onCall(
   async (
     data,
@@ -546,13 +545,41 @@ exports.getUserConversations = enhancedFunctions.https.onCall(
     .orderBy('dateUpdated', 'desc')
     .get();
 
-  return snapshot.docs.map((doc: admin.firestore.DocumentData) => {
-    const dataWithId = {
-      datas: doc.data(),
-      id: doc.id,
+
+    const mapLoop = async (): Promise<any> => {
+      const conversations = snapshot.docs.map(async (doc: admin.firestore.DocumentData) => {
+        const conversationData = doc.data();
+        const offerData = await conversationData.offer.get()
+          .then((offer: admin.firestore.DocumentData) => {
+            return {
+              ...offer.data(),
+              id: offer.id,
+            }
+          });
+        const offerAuthor = await offerData.author.get()
+          .then((author: admin.firestore.DocumentData) => {
+            return {
+              ...author.data(),
+              id: author.id,
+            }
+          });
+        const dataWithId = {
+          datas: {
+            ...conversationData,
+            offer: {
+              ...offerData,
+              author: offerAuthor,
+            }
+          },
+          id: doc.id,
+        };
+        return dataWithId;
+      });
+
+      return await Promise.all(conversations);
     };
-    return dataWithId;
-  });
+    return mapLoop();
+
 });
 
 // SEND MESSAGE
@@ -866,7 +893,7 @@ exports.postConversation = enhancedFunctions.https.onCall(
       },
       askerUser: askerUser.id,
       receiverUser: receiverUser.id,
-      offer: offer.id,
+      offer: offer.ref,
       dateCreated: newDate,
       dateUpdated: newDate,
       messages: [],

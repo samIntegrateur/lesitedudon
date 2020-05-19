@@ -1,6 +1,6 @@
 import { ApiTimeStamp } from "./dates.type";
 import { FixedLengthArray } from "./utils.type";
-import { Offer } from "./offer.type";
+import { Offer, OfferFromApi } from "./offer.type";
 
 interface MessageCommon {
   isRead: boolean;
@@ -19,7 +19,6 @@ export interface Message extends MessageCommon {
 interface ConversationCommon {
   askerUser: string;
   receiverUser: string;
-  offer: string | Offer;
   users: FixedLengthArray<[string, string]>;
   // Todo: can we specify that we need 2 entities
   // which keys are askerUser and receiverUser values ?
@@ -33,6 +32,13 @@ export interface ConversationFromApi extends ConversationCommon {
   dateCreated: ApiTimeStamp;
   dateUpdated: ApiTimeStamp;
   messages: MessageFromApi[];
+  offer: OfferFromApi;
+}
+
+// Ex: getConversations
+export interface ConversationDataFromApi {
+  id: string;
+  datas: ConversationFromApi;
 }
 
 // After sanitize
@@ -40,6 +46,7 @@ export interface Conversation extends ConversationCommon {
   id: string;
   dateCreated: Date;
   dateUpdated: Date;
+  offer: Offer | string;
   messages: Message[];
 }
 

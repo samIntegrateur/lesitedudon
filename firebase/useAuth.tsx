@@ -8,7 +8,7 @@ import { Profile } from "../shared/types/profile.type";
 function useAuth() {
   const [user, setUser] = useState<UserEnhanced | undefined>();
   const [firebase, setFirebase] = useState<Firebase | undefined>();
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let unsubscribe: firebase.Unsubscribe;
